@@ -31,8 +31,8 @@ const MOCK_COMMENTS = [
         content: '댓글 내용',
         isSecret: false,
         parentId: undefined,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date('2024-01-01T00:00:00Z'),
+        updatedAt: new Date('2024-01-01T00:00:00Z'),
         user: {
             image: 'https://picsum.photos/100/100?random=10',
             name: '댓글 작성자',
@@ -46,10 +46,10 @@ const MOCK_COMMENTS = [
         content: '댓글 내용',
         isSecret: false,
         parentId: '1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date('2024-01-01T01:00:00Z'),
+        updatedAt: new Date('2024-01-01T01:00:00Z'),
         user: {
-            image: 'https://picsum.photos/100/100?random=10',
+            image: 'https://picsum.photos/100/100?random=11',
             name: '댓글 작성자',
             nickname: 'comment_writer',
         },
@@ -61,10 +61,10 @@ const MOCK_COMMENTS = [
         content: '댓글 내용',
         isSecret: false,
         parentId: '1',
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: new Date('2024-01-01T02:00:00Z'),
+        updatedAt: new Date('2024-01-01T02:00:00Z'),
         user: {
-            image: 'https://picsum.photos/100/100?random=10',
+            image: 'https://picsum.photos/100/100?random=12',
             name: '댓글 작성자',
             nickname: 'comment_writer',
         },
@@ -79,19 +79,20 @@ export const Comments: FC<CommentListProps> = ({ postId }) => {
     }
 
     const onReply = (parentId: string | undefined, content: string, isSecret: boolean) => {
+        const now = new Date()
         setComments([
             ...comments,
             {
-                id: crypto.randomUUID(),
+                id: `comment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 postId: postId,
                 userId: '1',
                 content: content,
                 isSecret: isSecret,
                 parentId: parentId,
-                createdAt: new Date(),
-                updatedAt: new Date(),
+                createdAt: now,
+                updatedAt: now,
                 user: {
-                    image: 'https://picsum.photos/100/100?random=10',
+                    image: `https://picsum.photos/100/100?random=${Date.now()}`,
                     name: '댓글 작성자',
                     nickname: 'comment_writer',
                 },

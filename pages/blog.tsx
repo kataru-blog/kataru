@@ -78,8 +78,9 @@ const MOCKPOSTS = [
 
 export const Blog = async (c: Context) => {
     return (
-        <div className='flex flex-col min-h-dvh size-full gap-3 sm:gap-5'>
+        <div className='flex flex-col min-h-dvh size-full gap-3 sm:gap-5 relative'>
             <UserCard
+                className='sticky top-12 z-10 backdrop-blur-lg bg-background/80'
                 blogDescription='블로그 설명'
                 user={{
                     id: '1',

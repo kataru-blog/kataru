@@ -86,10 +86,10 @@ const MOCK_MD = `
 ## Images Test
 
 ### Local Image Example
-![Sample Image](https://via.placeholder.com/200x100.png?text=Sample+Image)
+![Sample Image](https://picsum.photos/200/100?random=1)
 
 ### External Image Example
-![OpenAI Logo](https://upload.wikimedia.org/wikipedia/commons/4/4f/OpenAI_Logo.svg)
+![Sample Image](https://picsum.photos/200/100?random=2)
 
 ---
 
@@ -173,7 +173,7 @@ export const Post = async (c: Context) => {
                         customLinks: [{ url: 'https://example.com', label: '예시 링크' }],
                     }}
                 />
-                <IslandRenderer className='p-7' name='Comments' props={{ postId: '1' }} />
+                <IslandRenderer ssr={false} priority='low' className='p-7' name='Comments' props={{ postId: '1' }} />
             </section>
             <IslandRenderer
                 className='w-64 md:block hidden'
