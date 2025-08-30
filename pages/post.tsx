@@ -147,7 +147,7 @@ export const Post = async (c: Context) => {
     const postInfo = {
         title: '테스트 게시글',
         tag: '테스트 태그',
-        createdAt: new Date(),
+        createdAt: new Date('2024-01-01T00:00:00Z'),
         viewCount: 100,
         likeCount: 10,
     }
@@ -168,8 +168,8 @@ export const Post = async (c: Context) => {
                         email: 'blog_owner@example.com',
                         emailVerified: true,
                         image: 'https://picsum.photos/100/100?random=10',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
+                        createdAt: new Date('2024-01-01T00:00:00Z'),
+                        updatedAt: new Date('2024-01-01T00:00:00Z'),
                         customLinks: [{ url: 'https://example.com', label: '예시 링크' }],
                     }}
                 />
