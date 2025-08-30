@@ -1,0 +1,5 @@
+export { Home } from './home'
+export { Login } from './login'
+export { Register } from './register'
+export { Blog } from './blog'
+export { Post } from './post'

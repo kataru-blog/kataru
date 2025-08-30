@@ -1,0 +1,40 @@
+name = "kataru"
+main = "main.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "kataru.dev", custom_domain = true },
+  { pattern = "www.kataru.dev", custom_domain = true }
+]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kataru"
+database_id = "22272691-bf6b-4057-b6fe-3ec4dbf2c58e"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "kataru-images"
+
+[vars]
+PRODUCTION_DOMAIN = "kataru.dev"
+BASE_URL = "https://kataru.dev"
+
+[build]
+command = "bun run build"
+
+[dev]
+port = 3000
+local_protocol = "http"
+
+[site]
+bucket = "./assets"
+
+
+[observability.logs]
+enabled = true
+
+
+

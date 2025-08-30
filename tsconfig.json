@@ -1,0 +1,33 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "types": ["@cloudflare/workers-types", "bun", "node"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "react",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true,
+        "allowSyntheticDefaultImports": true,
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["./*"],
+            "entities/*": ["./entities/*"],
+            "features/*": ["./features/*"],
+            "island/*": ["./island/*"],
+            "lib/*": ["./lib/*"],
+            "middlewares/*": ["./middlewares/*"],
+            "pages/*": ["./pages/*"],
+            "routes/*": ["./routes/*"],
+            "shared/*": ["./shared/*"],
+            "types/*": ["./types/*"],
+            "widgets/*": ["./widgets/*"]
+        }
+    },
+    "include": ["**/*.ts", "**/*.tsx"],
+    "exclude": ["node_modules", "dist", ".wrangler", "scripts/*", "migrations/*", "./layoutserver.tsx"]
+}

@@ -1,0 +1,9 @@
+dist/
+node_modules/
+.env
+.claude
+.wrangler
+drizzle/meta
+drizzle/*.sql
+layoutserver.tsx
+docs/
