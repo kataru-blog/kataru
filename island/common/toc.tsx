@@ -7,7 +7,7 @@ type TOCProps = {
     className?: string
 }
 
-export const TOC: FC<TOCProps> = ({ toc, offset = 0, className }) => {
+export const TOC: FC<TOCProps> = ({ toc, offset = 120, className }) => {
     const { activeId, lockTo } = useActiveHeading(toc, { offset, unlockOnUserScroll: true })
 
     const onClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
@@ -20,8 +20,7 @@ export const TOC: FC<TOCProps> = ({ toc, offset = 0, className }) => {
     }
 
     return (
-        <nav className={className ?? 'sticky top-20 max-h-[80vh] overflow-auto pr-2'}>
-            <p className='mb-2 text-sm font-semibold text-muted-foreground'>Table of Contents</p>
+        <nav className={className ?? 'sticky top-14 max-h-[80vh] overflow-auto pr-2'}>
             <ul className='space-y-1'>
                 {toc.map((item) => {
                     const isActive = item.id === activeId
