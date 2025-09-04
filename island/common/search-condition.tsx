@@ -1,4 +1,4 @@
-import { FC, Fragment } from 'react'
+import { FC } from 'react'
 import { Badge } from '../badge'
 import { ScrollArea, ScrollBar } from '../scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../select'
@@ -14,6 +14,11 @@ export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], curren
         const urlParams = new URLSearchParams(window.location.search)
         if (value === 'All' && key === 'tag') {
             urlParams.delete('tag')
+        } else {
+            urlParams.set(key, value)
+        }
+        if (value === 'newest' && key === 'sort') {
+            urlParams.delete('sort')
         } else {
             urlParams.set(key, value)
         }

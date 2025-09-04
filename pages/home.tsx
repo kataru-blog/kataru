@@ -77,17 +77,19 @@ const mockPosts = [
 export const Home = async (c: Context) => {
     const searchParams = c.req.query()
     return (
-        <main className='flex flex-col gap-3 sm:gap-5 w-full items-start justify-center'>
+        <main className='flex flex-col gap-3 sm:gap-5 w-full items-start justify-center pb-3 sm:pb-5'>
             <IslandRenderer className='w-full' ssr={true} name='MainpageCarousel' props={{ posts: mockPosts }} />
             <IslandRenderer
                 className='w-full px-3 sm:px-5'
                 ssr={true}
+                priority='high'
                 name='SearchCondition'
-                props={{ allTags: mockPosts.flatMap((post) => post.tags), currentTag: searchParams.tag }}
+                props={{ allTags: mockPosts.flatMap((post) => post.tags), currentTag: searchParams.tag, sortBy: searchParams.sort }}
             />
             <IslandRenderer
                 className='w-full px-3 sm:px-5'
                 ssr={true}
+                priority='high'
                 name='Articles'
                 props={{ posts: mockPosts, apiUrl: 'http://localhost:3000' }}
             />

@@ -176,7 +176,7 @@ export const Post = async (c: Context) => {
                 <IslandRenderer ssr={false} priority='low' className='p-7' name='Comments' props={{ postId: '1' }} />
             </section>
             <IslandRenderer
-                className='w-64 md:block hidden'
+                className='w-64 sm:block hidden'
                 ssr={false}
                 priority='low'
                 name='TOC'

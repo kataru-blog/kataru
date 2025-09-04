@@ -77,10 +77,11 @@ const MOCKPOSTS = [
 ]
 
 export const Blog = async (c: Context) => {
+    const searchParams = c.req.query()
     return (
         <div className='flex flex-col min-h-dvh size-full gap-3 sm:gap-5 relative'>
             <UserCard
-                className='sticky top-12 z-10 backdrop-blur-lg bg-background/80'
+                className='sticky top-12 z-10 backdrop-blur-sm bg-background/80'
                 blogDescription='블로그 설명'
                 user={{
                     id: '1',
@@ -99,7 +100,7 @@ export const Blog = async (c: Context) => {
                     className='w-full px-3 sm:px-5'
                     ssr={true}
                     name='SearchCondition'
-                    props={{ allTags: MOCKTAGS, currentTag: 'All', sortBy: 'newest' }}
+                    props={{ allTags: MOCKTAGS, currentTag: searchParams.tag, sortBy: searchParams.sort }}
                 />
                 <IslandRenderer
                     className='w-full px-3 sm:px-5'

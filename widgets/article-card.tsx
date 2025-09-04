@@ -35,8 +35,8 @@ export const ArticleCard: FC<ArticleCardProps> = ({ id, thumbnailUrl, title, sum
 
                 <div className='flex-1 min-w-0 flex flex-col justify-between p-3'>
                     <div>
-                        <h3 className='font-bold text-xl line-clamp-1 text-balance group-hover:text-primary transition-colors'>{title}</h3>
-                        <p className='text-muted-foreground text-base mb-4 line-clamp-2 leading-relaxed'>{summary || ''}</p>
+                        <h3 className='font-bold text-lg sm:text-xl line-clamp-1 text-balance group-hover:text-primary transition-colors'>{title}</h3>
+                        <p className='text-muted-foreground text-md sm:text-base mb-4 line-clamp-2 leading-relaxed'>{summary || ''}</p>
                     </div>
 
                     <div className='flex items-center justify-between'>
