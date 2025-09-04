@@ -1,4 +1,4 @@
-import { and, count, desc, eq, like, not } from 'drizzle-orm'
+import { and, desc, eq, like, not, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { posts, postTags, tags } from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
@@ -73,34 +73,56 @@ export const deleteTag = async (db: DB, tagId: string) => {
 }
 
 export const getTagById = async (db: DB, tagId: string) => {
-    const tag = await db.select().from(tags).where(eq(tags.id, tagId)).get()
+    const tagWithCount = await db
+        .select({
+            tag: tags,
+            postCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${postTags}
+                    WHERE ${postTags.tagId} = ${tags.id}
+                ), 0)
+            `.as('postCount'),
+        })
+        .from(tags)
+        .where(eq(tags.id, tagId))
+        .get()
 
-    if (!tag) {
+    if (!tagWithCount) {
         return null
     }
 
-    const postCount = await db.select({ count: count() }).from(postTags).where(eq(postTags.tagId, tagId)).get()
-
     return {
-        ...tag,
-        postCount: postCount?.count || 0,
+        ...tagWithCount.tag,
+        postCount: tagWithCount.postCount,
     }
 }
 
 export const getTagByName = async (db: DB, name: string) => {
     name = name.trim().toLowerCase()
 
-    const tag = await db.select().from(tags).where(eq(tags.name, name)).get()
+    const tagWithCount = await db
+        .select({
+            tag: tags,
+            postCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${postTags}
+                    WHERE ${postTags.tagId} = ${tags.id}
+                ), 0)
+            `.as('postCount'),
+        })
+        .from(tags)
+        .where(eq(tags.name, name))
+        .get()
 
-    if (!tag) {
+    if (!tagWithCount) {
         return null
     }
 
-    const postCount = await db.select({ count: count() }).from(postTags).where(eq(postTags.tagId, tag.id)).get()
-
     return {
-        ...tag,
-        postCount: postCount?.count || 0,
+        ...tagWithCount.tag,
+        postCount: tagWithCount.postCount,
     }
 }
 
@@ -109,34 +131,21 @@ export const getAllTags = async (
     options?: {
         limit?: number
         offset?: number
-        orderBy?: 'name' | 'popular'
+        orderBy?: 'name'
     },
 ) => {
-    const limit = options?.limit || 50
-    const offset = options?.offset || 0
+    const limit = Math.min(Math.max(options?.limit || 50, 1), 100)
+    const offset = Math.max(options?.offset || 0, 0)
 
-    const tagsData = db
-        .select({
-            tag: tags,
-            postCount: count(postTags.postId),
-        })
+    const results = await db
+        .select()
         .from(tags)
-        .leftJoin(postTags, eq(tags.id, postTags.tagId))
-        .groupBy(tags.id)
-        .$dynamic()
+        .orderBy(desc(tags.name))
+        .limit(limit)
+        .offset(offset)
+        .all()
 
-    if (options?.orderBy === 'popular') {
-        tagsData.orderBy(desc(postTags.postId))
-    } else {
-        tagsData.orderBy(desc(tags.name))
-    }
-
-    const results = await tagsData.limit(limit).offset(offset).all()
-
-    return results.map((r) => ({
-        ...r.tag,
-        postCount: r.postCount || 0,
-    }))
+    return results
 }
 
 export const getTagsByBlogId = async (
@@ -147,22 +156,34 @@ export const getTagsByBlogId = async (
         orderBy?: 'name' | 'popular'
     },
 ) => {
-    const limit = options?.limit || 50
+    const limit = Math.min(Math.max(options?.limit || 50, 1), 100)
 
     const tagsData = db
         .select({
             tag: tags,
-            postCount: count(postTags.postId),
+            postCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${postTags}
+                    INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
+                    WHERE ${postTags.tagId} = ${tags.id} 
+                    AND ${posts.blogId} = ${blogId}
+                ), 0)
+            `.as('postCount'),
         })
         .from(tags)
-        .innerJoin(postTags, eq(tags.id, postTags.tagId))
-        .innerJoin(posts, eq(postTags.postId, posts.id))
-        .where(eq(posts.blogId, blogId))
-        .groupBy(tags.id)
+        .where(
+            sql`EXISTS (
+                SELECT 1 FROM ${postTags}
+                INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
+                WHERE ${postTags.tagId} = ${tags.id}
+                AND ${posts.blogId} = ${blogId}
+            )`
+        )
         .$dynamic()
 
     if (options?.orderBy === 'popular') {
-        tagsData.orderBy(desc(postTags.postId))
+        tagsData.orderBy(desc(sql`postCount`))
     } else {
         tagsData.orderBy(desc(tags.name))
     }
@@ -171,7 +192,7 @@ export const getTagsByBlogId = async (
 
     return results.map((r) => ({
         ...r.tag,
-        postCount: r.postCount || 0,
+        postCount: r.postCount,
     }))
 }
 
@@ -182,7 +203,7 @@ export const searchTags = async (
         limit?: number
     },
 ) => {
-    const limit = options?.limit || 10
+    const limit = Math.min(Math.max(options?.limit || 10, 1), 50)
     query = query.trim().toLowerCase()
 
     if (!query) {
@@ -192,19 +213,23 @@ export const searchTags = async (
     const tagsData = await db
         .select({
             tag: tags,
-            postCount: count(postTags.postId),
+            postCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${postTags}
+                    WHERE ${postTags.tagId} = ${tags.id}
+                ), 0)
+            `.as('postCount'),
         })
         .from(tags)
-        .leftJoin(postTags, eq(tags.id, postTags.tagId))
         .where(like(tags.name, `%${query}%`))
-        .groupBy(tags.id)
         .orderBy(desc(tags.name))
         .limit(limit)
         .all()
 
     return tagsData.map((r) => ({
         ...r.tag,
-        postCount: r.postCount || 0,
+        postCount: r.postCount,
     }))
 }
 

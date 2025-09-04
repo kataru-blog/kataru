@@ -5,5 +5,5 @@ node_modules/
 .wrangler
 drizzle/meta
 drizzle/*.sql
-layoutserver.tsx
-docs/
+# layoutserver.tsx
+# docs/

@@ -100,7 +100,7 @@ export const Blog = async (c: Context) => {
                     className='w-full px-3 sm:px-5'
                     ssr={true}
                     name='SearchCondition'
-                    props={{ allTags: MOCKTAGS, currentTag: searchParams.tag, sortBy: searchParams.sort }}
+                    props={{ allTags: MOCKTAGS.map((tag) => ({ id: tag, name: tag })), currentTag: searchParams.tag, sortBy: searchParams.sort }}
                 />
                 <IslandRenderer
                     className='w-full px-3 sm:px-5'

@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/d1'
-import { eq, and, desc, asc, count } from 'drizzle-orm'
+import { eq, and, desc, asc, count, sql } from 'drizzle-orm'
 import { comments, posts, blogs, user } from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
 
@@ -180,16 +180,20 @@ export const getCommentsByPostId = async (db: DB, postId: string, userId?: strin
     orderBy?: 'latest' | 'oldest'
     includeSecret?: boolean
 }) => {
-    const limit = options?.limit || 50
-    const offset = options?.offset || 0
+    const limit = Math.min(Math.max(options?.limit || 50, 1), 100)
+    const offset = Math.max(options?.offset || 0, 0)
     
-    const post = await db
-        .select()
+    const postWithBlog = await db
+        .select({
+            post: posts,
+            blogUserId: blogs.userId,
+        })
         .from(posts)
+        .innerJoin(blogs, eq(posts.blogId, blogs.id))
         .where(eq(posts.id, postId))
         .get()
     
-    if (!post) {
+    if (!postWithBlog) {
         throw new AppError(ERROR_MESSAGES.COMMENT.POST_NOT_FOUND)
     }
     
@@ -218,16 +222,9 @@ export const getCommentsByPostId = async (db: DB, postId: string, userId?: strin
         .offset(offset)
         .all()
     
-    const blogOwner = await db
-        .select({ userId: blogs.userId })
-        .from(blogs)
-        .innerJoin(posts, eq(blogs.id, posts.blogId))
-        .where(eq(posts.id, postId))
-        .get()
-    
     return commentsData.map(c => {
         const isAuthor = c.comment.userId === userId
-        const isBlogOwner = blogOwner?.userId === userId
+        const isBlogOwner = postWithBlog.blogUserId === userId
         const canViewSecret = isAuthor || isBlogOwner
         
         if (c.comment.isSecret && !canViewSecret) {
@@ -253,8 +250,8 @@ export const getCommentsByUserId = async (db: DB, userId: string, options?: {
     limit?: number
     offset?: number
 }) => {
-    const limit = options?.limit || 20
-    const offset = options?.offset || 0
+    const limit = Math.min(Math.max(options?.limit || 20, 1), 100)
+    const offset = Math.max(options?.offset || 0, 0)
     
     const commentsData = await db
         .select({
@@ -298,7 +295,7 @@ export const getCommentCount = async (db: DB, postId: string) => {
 export const getRecentComments = async (db: DB, blogId: string, options?: {
     limit?: number
 }) => {
-    const limit = options?.limit || 10
+    const limit = Math.min(Math.max(options?.limit || 10, 1), 50)
     
     const commentsData = await db
         .select({

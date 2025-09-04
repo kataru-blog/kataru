@@ -1,9 +1,8 @@
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
-import { eq, and, desc, asc, inArray, count, max } from 'drizzle-orm'
+import { eq, and, desc, asc, inArray, count, max, gte, lte, or, like, SQL } from 'drizzle-orm'
 import { posts, blogs, tags, postTags, views, likes } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
-import { ImageProcessor } from '../lib/image-utils'
 
 type DB = DrizzleD1Database<typeof schema>
 
@@ -20,8 +19,6 @@ export const createPost = async (
         allowComment?: boolean
         tagIds?: string[]
     },
-    r2?: R2Bucket,
-    baseUrl?: string
 ) => {
     const blog = await db.select().from(blogs).where(eq(blogs.id, blogId)).get()
 
@@ -42,22 +39,14 @@ export const createPost = async (
     }
 
     const postId = crypto.randomUUID()
-    
-    // Get next postNumber for this blog
+
     const maxPostNumber = await db
         .select({ max: max(posts.postNumber) })
         .from(posts)
         .where(eq(posts.blogId, blogId))
         .get()
-    
+
     const postNumber = (maxPostNumber?.max || 0) + 1
-    
-    // Process images if R2 is available
-    let processedContent = data.content
-    if (r2 && baseUrl) {
-        const imageProcessor = new ImageProcessor(db, r2, baseUrl)
-        processedContent = await imageProcessor.processContentImages(data.content, postId)
-    }
 
     const newPost = await db
         .insert(posts)
@@ -66,7 +55,7 @@ export const createPost = async (
             blogId,
             postNumber,
             title: data.title.trim(),
-            content: processedContent,
+            content: data.content,
             thumbnailUrl: data.thumbnailUrl,
             summary: data.summary,
             isNotice: data.isNotice || false,
@@ -82,10 +71,10 @@ export const createPost = async (
 
         if (validTags.length > 0) {
             await db.insert(postTags).values(
-                validTags.map(tag => ({
+                validTags.map((tag) => ({
                     postId,
                     tagId: tag.id,
-                }))
+                })),
             )
         }
     }
@@ -112,8 +101,6 @@ export const updatePost = async (
         allowComment?: boolean
         tagIds?: string[]
     },
-    r2?: R2Bucket,
-    baseUrl?: string
 ) => {
     const postWithBlog = await db
         .select({
@@ -147,13 +134,7 @@ export const updatePost = async (
 
     if (data.title !== undefined) updateData.title = data.title.trim()
     if (data.content !== undefined) {
-        // Process images if R2 is available
-        let processedContent = data.content
-        if (r2 && baseUrl) {
-            const imageProcessor = new ImageProcessor(db, r2, baseUrl)
-            processedContent = await imageProcessor.processContentImages(data.content, postId)
-        }
-        updateData.content = processedContent
+        updateData.content = data.content
     }
     if (data.thumbnailUrl !== undefined) updateData.thumbnailUrl = data.thumbnailUrl
     if (data.summary !== undefined) updateData.summary = data.summary
@@ -168,11 +149,13 @@ export const updatePost = async (
         if (data.tagIds.length > 0) {
             const validTags = await db.select().from(tags).where(inArray(tags.id, data.tagIds)).all()
 
-            for (const tag of validTags) {
-                await db.insert(postTags).values({
-                    postId,
-                    tagId: tag.id,
-                })
+            if (validTags.length > 0) {
+                await db.insert(postTags).values(
+                    validTags.map((tag) => ({
+                        postId,
+                        tagId: tag.id,
+                    })),
+                )
             }
         }
     }
@@ -180,7 +163,7 @@ export const updatePost = async (
     return updatedPost
 }
 
-export const deletePost = async (db: DB, postId: string, userId: string, r2?: R2Bucket, baseUrl?: string) => {
+export const deletePost = async (db: DB, postId: string, userId: string) => {
     const postWithBlog = await db
         .select({
             post: posts,
@@ -199,52 +182,96 @@ export const deletePost = async (db: DB, postId: string, userId: string, r2?: R2
         throw new AppError(ERROR_MESSAGES.POST.UNAUTHORIZED)
     }
 
-    // Delete associated images from R2
-    if (r2 && baseUrl) {
-        const imageProcessor = new ImageProcessor(db, r2, baseUrl)
-        await imageProcessor.deletePostImages(postId)
-    }
-
     await db.delete(posts).where(eq(posts.id, postId))
 
     return { success: true }
 }
 
-export const getPostById = async (db: DB, postId: string) => {
-    const postData = await db
+export const getPosts = async (
+    db: DB,
+    options?: {
+        tagId?: string
+        keyword?: string
+        limit?: number
+        offset?: number
+        orderBy?: 'newest' | 'most_view' | 'most_like'
+    },
+) => {
+    const limit = Math.min(Math.max(options?.limit || 10, 1), 100)
+    const offset = Math.max(options?.offset || 0, 0)
+
+    const likeCountSq = db
         .select({
-            post: posts,
-            blog: blogs,
+            postId: likes.postId,
+            likeCount: count(likes.id).as('likeCount'),
         })
-        .from(posts)
-        .innerJoin(blogs, eq(posts.blogId, blogs.id))
-        .where(eq(posts.id, postId))
-        .get()
+        .from(likes)
+        .groupBy(likes.postId)
+        .as('lc')
 
-    if (!postData) {
-        return null
-    }
+    let postsQuery
 
-    const [viewData, likeCount, postTagsData] = await Promise.all([
-        db.select().from(views).where(eq(views.postId, postId)).get(),
-        db.select({ count: count() }).from(likes).where(eq(likes.postId, postId)).get(),
-        db
+    if (options?.tagId) {
+        postsQuery = db
             .select({
-                tag: tags,
+                post: posts,
+                blog: blogs,
+                viewCount: views.count,
+                likeCount: likeCountSq.likeCount,
             })
             .from(postTags)
-            .innerJoin(tags, eq(postTags.tagId, tags.id))
-            .where(eq(postTags.postId, postId))
-            .all()
-    ])
-
-    return {
-        ...postData.post,
-        blog: postData.blog,
-        viewCount: viewData?.count || 0,
-        likeCount: likeCount?.count || 0,
-        tags: postTagsData.map((pt) => pt.tag),
+            .innerJoin(posts, eq(postTags.postId, posts.id))
+            .innerJoin(blogs, eq(posts.blogId, blogs.id))
+            .leftJoin(views, eq(views.postId, posts.id))
+            .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
+            .where(eq(postTags.tagId, options.tagId))
+            .$dynamic()
+    } else {
+        postsQuery = db
+            .select({
+                post: posts,
+                blog: blogs,
+                viewCount: views.count,
+                likeCount: likeCountSq.likeCount,
+            })
+            .from(posts)
+            .innerJoin(blogs, eq(posts.blogId, blogs.id))
+            .leftJoin(views, eq(views.postId, posts.id))
+            .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
+            .$dynamic()
     }
+
+    if (options?.keyword && options.keyword.trim()) {
+        const searchPattern = `%${options.keyword.trim()}%`
+        const conditions: SQL<unknown>[] = []
+
+        if (options.tagId) {
+            conditions.push(eq(postTags.tagId, options.tagId))
+        }
+
+        conditions.push(or(like(posts.title, searchPattern), like(posts.content, searchPattern)) as SQL<unknown>)
+
+        postsQuery = postsQuery.where(and(...conditions))
+    }
+
+    if (options?.orderBy === 'most_view') {
+        postsQuery = postsQuery.orderBy(desc(views.count))
+    } else if (options?.orderBy === 'most_like') {
+        postsQuery = postsQuery.orderBy(desc(likeCountSq.likeCount))
+    } else {
+        postsQuery = postsQuery.orderBy(desc(posts.createdAt))
+    }
+
+    const postsData = await postsQuery.limit(limit).offset(offset).all()
+
+    return postsData.map((p) => ({
+        ...p.post,
+        blog: p.blog,
+        viewCount: p.viewCount || 0,
+        likeCount: p.likeCount || 0,
+        page: Math.ceil((offset + 1) / limit),
+        limit,
+    }))
 }
 
 export const getPostsByBlogId = async (
@@ -253,176 +280,177 @@ export const getPostsByBlogId = async (
     options?: {
         limit?: number
         offset?: number
-        orderBy?: 'latest' | 'oldest' | 'popular'
+        orderBy?: 'newest' | 'most_view' | 'most_like'
         tagId?: string
+        keyword?: string
+        includeNotice?: boolean
     },
 ) => {
-    const limit = options?.limit || 10
-    const offset = options?.offset || 0
+    const limit = Math.min(Math.max(options?.limit || 10, 1), 100)
+    const offset = Math.max(options?.offset || 0, 0)
 
-    let query = db
+    const likeCountSq = db
+        .select({
+            postId: likes.postId,
+            likeCount: count(likes.id).as('likeCount'),
+        })
+        .from(likes)
+        .groupBy(likes.postId)
+        .as('lc')
+
+    let postsQuery = db
         .select({
             post: posts,
+            viewCount: views.count,
+            likeCount: likeCountSq.likeCount,
         })
         .from(posts)
+        .leftJoin(views, eq(views.postId, posts.id))
+        .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
         .where(eq(posts.blogId, blogId))
         .$dynamic()
 
+    const conditions: SQL<unknown>[] = [eq(posts.blogId, blogId)]
+
     if (options?.tagId) {
-        query = query
-            .innerJoin(postTags, eq(postTags.postId, posts.id))
-            .where(and(eq(posts.blogId, blogId), eq(postTags.tagId, options.tagId)))
+        postsQuery = postsQuery.innerJoin(postTags, eq(postTags.postId, posts.id))
+        conditions.push(eq(postTags.tagId, options.tagId))
     }
 
-    if (options?.orderBy === 'popular') {
-        const popularQuery = db
-            .select({
-                post: posts,
-            })
-            .from(posts)
-            .leftJoin(views, eq(views.postId, posts.id))
-            .where(eq(posts.blogId, blogId))
-            .orderBy(desc(views.count))
-            .$dynamic()
-        
-        if (options?.tagId) {
-            popularQuery
-                .innerJoin(postTags, eq(postTags.postId, posts.id))
-                .where(and(eq(posts.blogId, blogId), eq(postTags.tagId, options.tagId)))
-        }
-        
-        const popularPosts = await popularQuery.limit(limit).offset(offset).all()
-        const postIds = popularPosts.map(p => p.post.id)
-        
-        if (postIds.length === 0) return []
-        
-        const [viewsData, likesData, tagsData] = await Promise.all([
-            db.select({ postId: views.postId, count: views.count })
-                .from(views)
-                .where(inArray(views.postId, postIds))
-                .all(),
-            db.select({ postId: likes.postId, count: count() })
-                .from(likes)
-                .where(inArray(likes.postId, postIds))
-                .groupBy(likes.postId)
-                .all(),
-            db.select({ postId: postTags.postId, tag: tags })
-                .from(postTags)
-                .innerJoin(tags, eq(postTags.tagId, tags.id))
-                .where(inArray(postTags.postId, postIds))
-                .all()
-        ])
-        
-        const viewsMap = new Map(viewsData.map(v => [v.postId, v.count]))
-        const likesMap = new Map(likesData.map(l => [l.postId, l.count]))
-        const tagsMap = tagsData.reduce((acc, curr) => {
-            if (!acc[curr.postId]) acc[curr.postId] = []
-            acc[curr.postId].push(curr.tag)
-            return acc
-        }, {} as Record<string, typeof tags.$inferSelect[]>)
-        
-        return popularPosts.map(p => ({
-            ...p.post,
-            viewCount: viewsMap.get(p.post.id) || 0,
-            likeCount: likesMap.get(p.post.id) || 0,
-            tags: tagsMap[p.post.id] || [],
-        }))
+    if (!options?.includeNotice) {
+        conditions.push(eq(posts.isNotice, false))
     }
 
-    switch (options?.orderBy) {
-        case 'oldest':
-            query = query.orderBy(asc(posts.createdAt))
-            break
-        default:
-            query = query.orderBy(desc(posts.createdAt))
+    if (options?.keyword && options.keyword.trim()) {
+        const searchPattern = `%${options.keyword.trim()}%`
+        conditions.push(or(like(posts.title, searchPattern), like(posts.content, searchPattern)) as SQL<unknown>)
     }
 
-    const postsData = await query.limit(limit).offset(offset).all()
-    const postIds = postsData.map((p) => p.post.id)
+    if (conditions.length > 0) {
+        postsQuery = postsQuery.where(and(...conditions))
+    }
 
-    if (postIds.length === 0) return []
+    if (options?.orderBy === 'most_view') {
+        postsQuery = postsQuery.orderBy(desc(views.count))
+    } else if (options?.orderBy === 'most_like') {
+        postsQuery = postsQuery.orderBy(desc(likeCountSq.likeCount))
+    } else {
+        postsQuery = postsQuery.orderBy(desc(posts.createdAt))
+    }
 
-    const [viewsData, likesData, tagsData] = await Promise.all([
-        db.select({ postId: views.postId, count: views.count })
-            .from(views)
-            .where(inArray(views.postId, postIds))
-            .all(),
-        db.select({ postId: likes.postId, count: count() })
-            .from(likes)
-            .where(inArray(likes.postId, postIds))
-            .groupBy(likes.postId)
-            .all(),
-        db.select({ postId: postTags.postId, tag: tags })
-            .from(postTags)
-            .innerJoin(tags, eq(postTags.tagId, tags.id))
-            .where(inArray(postTags.postId, postIds))
-            .all()
-    ])
-
-    const viewsMap = new Map(viewsData.map(v => [v.postId, v.count]))
-    const likesMap = new Map(likesData.map(l => [l.postId, l.count]))
-    const tagsMap = tagsData.reduce((acc, curr) => {
-        if (!acc[curr.postId]) acc[curr.postId] = []
-        acc[curr.postId].push(curr.tag)
-        return acc
-    }, {} as Record<string, typeof tags.$inferSelect[]>)
+    const postsData = await postsQuery.limit(limit).offset(offset).all()
 
     return postsData.map((p) => ({
         ...p.post,
-        viewCount: viewsMap.get(p.post.id) || 0,
-        likeCount: likesMap.get(p.post.id) || 0,
-        tags: tagsMap[p.post.id] || [],
+        viewCount: p.viewCount || 0,
+        likeCount: p.likeCount || 0,
+        page: Math.ceil((offset + 1) / limit),
+        limit,
     }))
 }
 
-export const getPostsByTag = async (
-    db: DB,
-    tagId: string,
-    options?: {
-        limit?: number
-        offset?: number
-    },
-) => {
-    const limit = options?.limit || 10
-    const offset = options?.offset || 0
+export const getHotArticles = async (db: DB, limit: number = 5) => {
+    const safeLimit = Math.min(Math.max(limit, 1), 20)
+    const now = new Date()
+    const dayOfWeek = now.getDay()
+    const startOfWeek = new Date(now)
+    startOfWeek.setDate(now.getDate() - dayOfWeek)
+    startOfWeek.setHours(0, 0, 0, 0)
 
-    const postsData = await db
+    const endOfWeek = new Date(startOfWeek)
+    endOfWeek.setDate(startOfWeek.getDate() + 6)
+    endOfWeek.setHours(23, 59, 59, 999)
+
+    const likeCountSq = db
+        .select({
+            postId: likes.postId,
+            likeCount: count(likes.id).as('likeCount'),
+        })
+        .from(likes)
+        .groupBy(likes.postId)
+        .as('lc')
+
+    const hotPosts = await db
         .select({
             post: posts,
             blog: blogs,
+            viewCount: views.count,
+            likeCount: likeCountSq.likeCount,
         })
-        .from(postTags)
-        .innerJoin(posts, eq(postTags.postId, posts.id))
+        .from(posts)
         .innerJoin(blogs, eq(posts.blogId, blogs.id))
-        .where(eq(postTags.tagId, tagId))
-        .orderBy(desc(posts.createdAt))
-        .limit(limit)
-        .offset(offset)
+        .leftJoin(views, eq(views.postId, posts.id))
+        .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
+        .where(and(gte(posts.createdAt, startOfWeek), lte(posts.createdAt, endOfWeek)))
+        .orderBy(desc(likeCountSq.likeCount), desc(views.count), asc(posts.title))
+        .limit(safeLimit)
         .all()
 
-    const postIds = postsData.map(p => p.post.id)
-    
-    if (postIds.length === 0) return []
-
-    const [viewsData, likesData] = await Promise.all([
-        db.select({ postId: views.postId, count: views.count })
-            .from(views)
-            .where(inArray(views.postId, postIds))
-            .all(),
-        db.select({ postId: likes.postId, count: count() })
-            .from(likes)
-            .where(inArray(likes.postId, postIds))
-            .groupBy(likes.postId)
-            .all()
-    ])
-
-    const viewsMap = new Map(viewsData.map(v => [v.postId, v.count]))
-    const likesMap = new Map(likesData.map(l => [l.postId, l.count]))
-
-    return postsData.map((p) => ({
+    return hotPosts.map((p) => ({
         ...p.post,
         blog: p.blog,
-        viewCount: viewsMap.get(p.post.id) || 0,
-        likeCount: likesMap.get(p.post.id) || 0,
+        viewCount: p.viewCount || 0,
+        likeCount: p.likeCount || 0,
     }))
+}
+
+export const getPostById = async (db: DB, postId: string, includeRelated: boolean = true) => {
+    if (!postId) {
+        throw new AppError(ERROR_MESSAGES.POST.NOT_FOUND)
+    }
+
+    const likeCountSq = db
+        .select({
+            postId: likes.postId,
+            likeCount: count(likes.id).as('likeCount'),
+        })
+        .from(likes)
+        .groupBy(likes.postId)
+        .as('lc')
+
+    const postData = await db
+        .select({
+            post: posts,
+            blog: blogs,
+            viewCount: views.count,
+            likeCount: likeCountSq.likeCount,
+        })
+        .from(posts)
+        .innerJoin(blogs, eq(posts.blogId, blogs.id))
+        .leftJoin(views, eq(views.postId, posts.id))
+        .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
+        .where(eq(posts.id, postId))
+        .get()
+
+    if (!postData) {
+        throw new AppError(ERROR_MESSAGES.POST.NOT_FOUND)
+    }
+
+    let tagsData: (typeof tags.$inferSelect)[] = []
+    if (includeRelated) {
+        const postTagsData = await db
+            .select({
+                tag: tags,
+            })
+            .from(postTags)
+            .innerJoin(tags, eq(postTags.tagId, tags.id))
+            .where(eq(postTags.postId, postId))
+            .all()
+
+        tagsData = postTagsData.map((t) => t.tag)
+    }
+
+    db.update(views)
+        .set({ count: (postData.viewCount || 0) + 1 })
+        .where(eq(views.postId, postId))
+        .run()
+        .catch(console.error)
+
+    return {
+        ...postData.post,
+        blog: postData.blog,
+        viewCount: postData.viewCount || 0,
+        likeCount: postData.likeCount || 0,
+        tags: tagsData,
+    }
 }

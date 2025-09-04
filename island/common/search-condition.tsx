@@ -5,14 +5,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 
 interface SearchConditionProps {
     currentTag?: string
-    allTags?: string[]
+    allTags?: { id: string; name: string }[]
     sortBy?: string
 }
 
 export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], currentTag = 'All', sortBy = 'newest' }) => {
     const updateUrl = (key: string, value: string) => {
         const urlParams = new URLSearchParams(window.location.search)
-        if (value === 'All' && key === 'tag') {
+        if (!value && key === 'tag') {
             urlParams.delete('tag')
         } else {
             urlParams.set(key, value)
@@ -32,7 +32,7 @@ export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], curren
     return (
         <div className='flex flex-col gap-5'>
             <div className='flex items-center justify-between'>
-                <h2 className='text-2xl font-bold'>{currentTag === 'All' ? 'Articles' : currentTag}</h2>
+                <h2 className='text-2xl font-bold'>{currentTag === '' ? 'Articles' : currentTag}</h2>
                 <Select value={sortBy} onValueChange={handleSortChange}>
                     <SelectTrigger className='rounded'>
                         <SelectValue placeholder='정렬 기준' />
@@ -47,13 +47,13 @@ export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], curren
 
             <ScrollArea className='w-full whitespace-nowrap'>
                 <div className='flex gap-2 pb-4'>
-                    {['All', ...allTags].map((tag) => (
+                    {[{ id: '', name: 'All' }, ...allTags].map((tag) => (
                         <Badge
                             className='rounded'
-                            key={tag}
-                            variant={currentTag === tag ? 'default' : 'secondary'}
-                            onClick={() => handleTagClick(tag)}>
-                            {tag}
+                            key={tag.id + tag.name}
+                            variant={currentTag === tag.id ? 'default' : 'secondary'}
+                            onClick={() => handleTagClick(tag.id)}>
+                            {tag.name}
                         </Badge>
                     ))}
                 </div>

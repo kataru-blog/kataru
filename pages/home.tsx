@@ -84,7 +84,11 @@ export const Home = async (c: Context) => {
                 ssr={true}
                 priority='high'
                 name='SearchCondition'
-                props={{ allTags: mockPosts.flatMap((post) => post.tags), currentTag: searchParams.tag, sortBy: searchParams.sort }}
+                props={{
+                    allTags: mockPosts.flatMap((post) => post.tags.map((tag) => ({ id: tag, name: tag }))),
+                    currentTag: searchParams.tag,
+                    sortBy: searchParams.sort,
+                }}
             />
             <IslandRenderer
                 className='w-full px-3 sm:px-5'

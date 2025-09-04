@@ -52,6 +52,26 @@ export const ERROR_MESSAGES = {
             status: 400,
             message: 'Post content is required',
         },
+        INVALID_TAG: {
+            status: 400,
+            message: 'Invalid tag ID provided',
+        },
+        INVALID_BLOG: {
+            status: 400,
+            message: 'Invalid blog ID provided',
+        },
+        INVALID_LIMIT: {
+            status: 400,
+            message: 'Limit must be between 1 and 100',
+        },
+        INVALID_OFFSET: {
+            status: 400,
+            message: 'Offset must be a positive number',
+        },
+        INVALID_ORDER_BY: {
+            status: 400,
+            message: 'Invalid orderBy option',
+        },
     },
     TAG: {
         NOT_FOUND: {
