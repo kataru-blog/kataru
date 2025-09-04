@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "419e0aa6-a8c1-4af6-8d1b-cd94126314ef",
+  "id": "e21d3125-ad98-40f7-83ba-bd4e2eff1b97",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "blogs": {
@@ -64,6 +64,13 @@
             "user_id"
           ],
           "isUnique": true
+        },
+        "idx_blogs_userId": {
+          "name": "idx_blogs_userId",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -124,6 +131,20 @@
             "domain"
           ],
           "isUnique": true
+        },
+        "idx_customDomains_blogId": {
+          "name": "idx_customDomains_blogId",
+          "columns": [
+            "blog_id"
+          ],
+          "isUnique": false
+        },
+        "idx_customDomains_domain": {
+          "name": "idx_customDomains_domain",
+          "columns": [
+            "domain"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -239,6 +260,95 @@
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
+    "custom_link": {
+      "name": "custom_link",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "url": {
+          "name": "url",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "label": {
+          "name": "label",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sort_order": {
+          "name": "sort_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 0
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "custom_link_user_id_idx": {
+          "name": "custom_link_user_id_idx",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "custom_link_sort_order_idx": {
+          "name": "custom_link_sort_order_idx",
+          "columns": [
+            "sort_order"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "custom_link_user_id_user_id_fk": {
+          "name": "custom_link_user_id_user_id_fk",
+          "tableFrom": "custom_link",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
     "likes": {
       "name": "likes",
       "columns": {
@@ -264,7 +374,30 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_likes_postId": {
+          "name": "idx_likes_postId",
+          "columns": [
+            "post_id"
+          ],
+          "isUnique": false
+        },
+        "idx_likes_userId": {
+          "name": "idx_likes_userId",
+          "columns": [
+            "user_id"
+          ],
+          "isUnique": false
+        },
+        "idx_likes_userId_id": {
+          "name": "idx_likes_userId_id",
+          "columns": [
+            "user_id",
+            "id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "likes_post_id_posts_id_fk": {
           "name": "likes_post_id_posts_id_fk",
@@ -323,7 +456,23 @@
           "default": 0
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_views_postId": {
+          "name": "idx_views_postId",
+          "columns": [
+            "post_id"
+          ],
+          "isUnique": false
+        },
+        "idx_views_postId_count": {
+          "name": "idx_views_postId_count",
+          "columns": [
+            "post_id",
+            "count"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "views_post_id_posts_id_fk": {
           "name": "views_post_id_posts_id_fk",
@@ -455,7 +604,22 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_postTags_tagId": {
+          "name": "idx_postTags_tagId",
+          "columns": [
+            "tag_id"
+          ],
+          "isUnique": false
+        },
+        "idx_postTags_postId": {
+          "name": "idx_postTags_postId",
+          "columns": [
+            "post_id"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "post_tags_post_id_posts_id_fk": {
           "name": "post_tags_post_id_posts_id_fk",
@@ -484,7 +648,15 @@
           "onUpdate": "no action"
         }
       },
-      "compositePrimaryKeys": {},
+      "compositePrimaryKeys": {
+        "post_tags_post_id_tag_id_pk": {
+          "columns": [
+            "post_id",
+            "tag_id"
+          ],
+          "name": "post_tags_post_id_tag_id_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -571,7 +743,30 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "idx_posts_blogId": {
+          "name": "idx_posts_blogId",
+          "columns": [
+            "blog_id"
+          ],
+          "isUnique": false
+        },
+        "idx_posts_createdAt": {
+          "name": "idx_posts_createdAt",
+          "columns": [
+            "created_at"
+          ],
+          "isUnique": false
+        },
+        "idx_posts_blogId_createdAt": {
+          "name": "idx_posts_blogId_createdAt",
+          "columns": [
+            "blog_id",
+            "created_at"
+          ],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "posts_blog_id_blogs_id_fk": {
           "name": "posts_blog_id_blogs_id_fk",
@@ -616,6 +811,13 @@
             "name"
           ],
           "isUnique": true
+        },
+        "idx_tags_name": {
+          "name": "idx_tags_name",
+          "columns": [
+            "name"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -850,6 +1052,13 @@
           "notNull": true,
           "autoincrement": false
         },
+        "nickname": {
+          "name": "nickname",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "email_verified": {
           "name": "email_verified",
           "type": "integer",
@@ -885,6 +1094,13 @@
           "name": "user_email_unique",
           "columns": [
             "email"
+          ],
+          "isUnique": true
+        },
+        "user_nickname_unique": {
+          "name": "user_nickname_unique",
+          "columns": [
+            "nickname"
           ],
           "isUnique": true
         }

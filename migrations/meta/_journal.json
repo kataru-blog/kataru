@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1756292439832,
-      "tag": "0000_demonic_speed_demon",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1756526861972,
-      "tag": "0001_gorgeous_blade",
+      "when": 1757012094342,
+      "tag": "0000_common_madelyne_pryor",
       "breakpoints": true
     }
   ]

@@ -22,6 +22,7 @@ export const createAuth = (env: CloudflareEnv) => {
                     required: false,
                     fieldName: 'nickname',
                     returned: true,
+                    defaultValue: () => `user_${crypto.randomUUID().substring(0, 8)}`,
                 },
             },
         },
