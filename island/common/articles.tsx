@@ -1,10 +1,8 @@
-import { IslandRenderer } from '@/shared/islands/renderer'
 import { ArticleCard } from '@/widgets'
 import type { ComponentProps, FC } from 'react'
 
 interface ArticlesProps {
     posts: ComponentProps<typeof ArticleCard>[]
-    apiUrl: string
 }
 
 export const Articles: FC<ArticlesProps> = ({ posts }) => {
@@ -13,7 +11,6 @@ export const Articles: FC<ArticlesProps> = ({ posts }) => {
             {posts.map((post) => (
                 <ArticleCard key={post.id} {...post} />
             ))}
-            <IslandRenderer ssr={false} priority='low' props={{ apiUrl: '/api/posts' }} name='ArticleLoader' />
         </div>
     )
 }

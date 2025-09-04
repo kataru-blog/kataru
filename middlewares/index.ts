@@ -6,10 +6,10 @@ import { dbMiddleware } from './db.middleware'
 import { setCors } from './cors'
 
 export const InitializeMiddlewares = (app: Hono<{ Bindings: CloudflareEnv }>) => {
-    app.use(renderer)
-    app.use('*', dbMiddleware)
-    app.use('*', domainMiddleware)
-    app.use('*', authMiddleware)
     app.use('*', setCors)
+    app.use('*', dbMiddleware)
+    app.use('*', authMiddleware)
+    app.use('*', domainMiddleware)
+    app.use(renderer)
     return app
 }

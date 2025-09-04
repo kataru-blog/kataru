@@ -1,19 +1,16 @@
-import { Badge } from '@/island/badge'
 import { Button } from '@/island/button'
-import { type FC } from 'react'
-import { ArrowLeft, Calendar, Eye, Heart } from 'lucide-react'
 import dayjs from 'dayjs'
-import { ScrollArea } from '../scroll-area'
+import { ArrowLeft, Calendar, Eye, Heart } from 'lucide-react'
+import { type FC } from 'react'
 
 interface PostHeaderProps {
-    tag: string
     title: string
     createdAt: Date
     viewCount: number
     likeCount: number
 }
 
-export const PostHeader: FC<PostHeaderProps> = ({ tag, title, createdAt, viewCount, likeCount }) => {
+export const PostHeader: FC<PostHeaderProps> = ({ title, createdAt, viewCount, likeCount }) => {
     const onBack = () => {
         const pathList = window.location.href.split('/')
         window.location.href = pathList.slice(0, -1).join('/')
@@ -25,9 +22,6 @@ export const PostHeader: FC<PostHeaderProps> = ({ tag, title, createdAt, viewCou
                     <ArrowLeft className='size-3.5 sm:size-5' />
                     <span className='sr-only'>뒤로가기</span>
                 </Button>
-                <Badge variant={'outline'} className='text-xs sm:text-sm py-0.5 px-1 sm:py-1 sm:px-1.5 h-fit rounded'>
-                    {tag}
-                </Badge>
                 <h1 className='text-md sm:text-xl font-semibold py-2 line-clamp-2 text-pretty'>{title}</h1>
             </div>
             <div className='flex gap-1 sm:gap-2 text-xs sm:text-sm px-1 sm:px-0'>

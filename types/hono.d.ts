@@ -4,7 +4,7 @@ import 'hono'
 
 declare module 'hono' {
     interface ContextVariableMap extends CloudflareVariables {
-        user?: User
+        user?: User & { nickname?: string }
         session?: Session
         env: CloudflareEnv
         title: string

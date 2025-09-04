@@ -1,5 +1,5 @@
 import { user as User } from 'entities'
-import { Hono } from 'hono'
+import { Context, Hono } from 'hono'
 import { Blog, Home, Login, Post } from 'pages'
 import { Layout } from 'widgets/layout'
 
@@ -34,10 +34,10 @@ export const PagesRoute = () => {
             c.set('title', title)
             const user = c.get('user')
             const blog = c.get('blog')
-            const blogUser = c.get('blogUser')
-            const content = await Component(c)
+            const nickname = c.req.param('nickname')
+            const content = await Component(c as unknown as Context<{ Bindings: CloudflareEnv }>)
             return c.render(
-                <Layout user={{ ...user, nickname: blogUser?.nickname || '' } as typeof User.$inferSelect} blog={blog} isRoot={isRoot}>
+                <Layout user={{ ...user } as typeof User.$inferSelect} blog={blog} isRoot={isRoot} blogName={nickname}>
                     {content}
                 </Layout>,
             )

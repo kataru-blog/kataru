@@ -8,14 +8,19 @@ export const GatewayRoute = () => {
 
     app.get('/posts', async (c) => {
         const db = c.get('db')
-        return c.json(
-            getPosts(db, {
-                tagId: c.req.query('tagId'),
-                orderBy: c.req.query('orderBy') as 'newest' | 'most_view' | 'most_like' | undefined,
-                limit: Number(c.req.query('limit') || 10),
-                offset: Number(c.req.query('page') || 1),
-            }),
-        )
+        const page = Number(c.req.query('page') || 1)
+        const limit = Number(c.req.query('limit') || 10)
+        const offset = (page - 1) * limit
+
+        const posts = await getPosts(db, {
+            tagId: c.req.query('tagId'),
+            keyword: c.req.query('keyword'),
+            orderBy: c.req.query('orderBy') as 'newest' | 'most_view' | 'most_like' | undefined,
+            limit,
+            offset,
+        })
+
+        return c.json(posts)
     })
 
     app.get('/posts/:blogId', async (c) => {

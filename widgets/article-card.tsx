@@ -3,17 +3,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/island/avatar'
 import { Card } from '@/island/card'
 import { Eye, Heart } from 'lucide-react'
 import { Image } from '@/island/lazy-image'
+import { user, posts } from '@/entities'
 
-interface ArticleCardProps {
-    id: string
-    thumbnailUrl: string | null
-    title: string
-    summary: string | null
-    user: {
-        image: string | null
-        nickname: string
-    }
-    createdAt: Date
+interface ArticleCardProps extends Pick<typeof posts.$inferSelect, 'id' | 'thumbnailUrl' | 'title' | 'summary' | 'createdAt'> {
+    user: Pick<typeof user.$inferSelect, 'image' | 'nickname'>
     viewCount: number
     likeCount: number
 }

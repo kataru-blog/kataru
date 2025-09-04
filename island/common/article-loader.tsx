@@ -1,3 +1,4 @@
+import { GetPostsResponse } from '@/types/gateway.types'
 import { ArticleCard } from '@/widgets'
 import { ComponentProps, useEffect, useRef, useState, type FC } from 'react'
 
@@ -7,32 +8,80 @@ interface ArticleLoaderProps {
 export const ArticleLoader: FC<ArticleLoaderProps> = ({ apiUrl }) => {
     const loaderRef = useRef<HTMLDivElement>(null)
     const [posts, setPosts] = useState<ComponentProps<typeof ArticleCard>[]>([])
-    const [page, setPage] = useState(1)
+    const [page, setPage] = useState(2)
+    const [hasMore, setHasMore] = useState(true)
+    const [isLoading, setIsLoading] = useState(false)
 
     const loadPosts = async () => {
-        if (!apiUrl) return
+        if (!apiUrl || !hasMore || isLoading) return
 
+        setIsLoading(true)
         try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                body: JSON.stringify({
-                    page,
-                    limit: 10,
-                }),
+            const urlParams = new URLSearchParams(window.location.search)
+            const tag = urlParams.get('tag')
+            const sort = urlParams.get('sort') || 'newest'
+            const keyword = urlParams.get('keyword')
+
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: '10',
+                orderBy: sort,
             })
 
-            if (!response.ok) return
+            if (tag) queryParams.set('tagId', tag)
+            if (keyword) queryParams.set('keyword', keyword)
 
-            const data: { posts: ComponentProps<typeof ArticleCard>[] } = await response.json()
-            setPosts((prev) => [...prev, ...data?.posts])
+            const response = await fetch(`${window.location.origin}${apiUrl}?${queryParams.toString()}`, {
+                method: 'GET',
+            })
+
+            if (!response.ok) {
+                setHasMore(false)
+                return
+            }
+
+            const data: GetPostsResponse = await response.json()
+
+            if (!data || data.length === 0) {
+                setHasMore(false)
+                return
+            }
+
+            const formattedPosts = data.map((post: any) => ({
+                id: post.id,
+                title: post.title,
+                summary: post.summary,
+                thumbnailUrl: post.thumbnailUrl,
+                createdAt: post.createdAt,
+                user: {
+                    nickname: post.blog?.title || 'Anonymous',
+                    image: null,
+                },
+                tags: [],
+                viewCount: post.viewCount,
+                likeCount: post.likeCount,
+            }))
+
+            setPosts((prev) => [...prev, ...formattedPosts])
             setPage((prev) => prev + 1)
-        } catch {}
+        } catch (error) {
+            console.error('Failed to load posts:', error)
+            setHasMore(false)
+        } finally {
+            setIsLoading(false)
+        }
     }
+
+    useEffect(() => {
+        setPosts([])
+        setPage(2)
+        setHasMore(true)
+    }, [])
 
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             entries.forEach((entry) => {
-                if (entry.isIntersecting) {
+                if (entry.isIntersecting && hasMore && !isLoading) {
                     loadPosts()
                 }
             })
@@ -45,16 +94,22 @@ export const ArticleLoader: FC<ArticleLoaderProps> = ({ apiUrl }) => {
         return () => {
             observer.disconnect()
         }
-    }, [loaderRef])
+    }, [hasMore, isLoading, page])
 
     return (
         apiUrl && (
-            <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
-                {posts?.map((post) => (
-                    <ArticleCard key={post.id} {...post} />
-                ))}
-                <div ref={loaderRef} className='h-3' />
-            </div>
+            <>
+                <div className='grid grid-cols-1 xl:grid-cols-2 gap-6'>
+                    {posts?.map((post) => (
+                        <ArticleCard key={post.id} {...post} />
+                    ))}
+                </div>
+                {hasMore && (
+                    <div ref={loaderRef} className='h-20 flex items-center justify-center'>
+                        {isLoading && <span className='text-gray-500'>Loading...</span>}
+                    </div>
+                )}
+            </>
         )
     )
 }

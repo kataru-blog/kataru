@@ -149,6 +149,30 @@ export const ERROR_MESSAGES = {
             message: 'Method not allowed',
         },
     },
+    USER: {
+        NOT_FOUND: {
+            status: 404,
+            message: 'User not found',
+        },
+    },
+    NICKNAME: {
+        NOT_FOUND: {
+            status: 404,
+            message: 'Nickname not found',
+        },
+    },
+    EMAIL: {
+        NOT_FOUND: {
+            status: 404,
+            message: 'Email not found',
+        },
+    },
+    IMAGE: {
+        NOT_FOUND: {
+            status: 404,
+            message: 'Image not found',
+        },
+    },
 } as const
 
 export class AppError extends Error {

@@ -32,7 +32,7 @@ export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], curren
     return (
         <div className='flex flex-col gap-5'>
             <div className='flex items-center justify-between'>
-                <h2 className='text-2xl font-bold'>{currentTag === '' ? 'Articles' : currentTag}</h2>
+                <h2 className='text-2xl font-bold'>{currentTag === '' ? 'Articles' : allTags.find((tag) => tag.id === currentTag)?.name}</h2>
                 <Select value={sortBy} onValueChange={handleSortChange}>
                     <SelectTrigger className='rounded'>
                         <SelectValue placeholder='정렬 기준' />

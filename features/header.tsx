@@ -9,24 +9,25 @@ interface HeaderProps {
     user?: typeof user.$inferSelect
     blog?: typeof blogs.$inferSelect
     isRoot?: boolean
+    blogName?: string
 }
 
-export const Header: FC<HeaderProps> = ({ user, blog, isRoot }) => {
+export const Header: FC<HeaderProps> = ({ user, blog, isRoot, blogName }) => {
     return (
         <header className='sticky backdrop-blur-sm bg-background/80 top-0 z-50 flex justify-between items-center w-full h-12 border-b border-secondary px-4'>
             <div className='flex items-center gap-2'>
                 <a href='/' className='dark:invert'>
                     <Image fetchPriority='high' src={'/favicon.ico'} alt='favicon' className='size-7' />
                 </a>
-                <a className='font-bold text-lg' href={isRoot ? '/' : `/${user?.nickname}`}>
+                <a className='font-bold text-lg' href={isRoot ? '/' : `/${blogName}`}>
                     {blog?.title || 'Kataru'}
                 </a>
             </div>
 
             <div className='flex items-center gap-2 sm:gap-3'>
-                {user ? (
+                {user?.id ? (
                     <Fragment>
-                        <a href='/blog' className='text-sm text-foreground/70 hover:text-foreground transition-colors'>
+                        <a href={`/${user.nickname}`} className='text-sm text-foreground/70 hover:text-foreground transition-colors'>
                             {user.name}
                         </a>
                         <IslandRenderer ssr={true} name='LogoutButton' />
