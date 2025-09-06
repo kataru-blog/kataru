@@ -9,3 +9,5 @@ layoutserver.ts
 docs/
 migrations/
 .mcp.json
+styles.css
+client.js
