@@ -9,7 +9,7 @@ interface SearchConditionProps {
     sortBy?: string
 }
 
-export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], currentTag = 'All', sortBy = 'newest' }) => {
+export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], currentTag = '', sortBy = 'newest' }) => {
     const updateUrl = (key: string, value: string) => {
         const urlParams = new URLSearchParams(window.location.search)
         if (!value && key === 'tag') {
@@ -32,8 +32,8 @@ export const SearchCondition: FC<SearchConditionProps> = ({ allTags = [], curren
     return (
         <div className='flex flex-col gap-5'>
             <div className='flex items-center justify-between'>
-                <h2 className='text-2xl font-bold'>{currentTag === '' ? 'Articles' : allTags.find((tag) => tag.id === currentTag)?.name}</h2>
-                <Select value={sortBy} onValueChange={handleSortChange}>
+                <h2 className='text-2xl font-bold'>{!currentTag ? 'Articles' : allTags.find((tag) => tag.id === currentTag)?.name}</h2>
+                <Select value={sortBy} onValueChange={handleSortChange} defaultValue='newest'>
                     <SelectTrigger className='rounded'>
                         <SelectValue placeholder='정렬 기준' />
                     </SelectTrigger>

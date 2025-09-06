@@ -9,9 +9,18 @@ export const views = sqliteTable(
         postId: text('post_id')
             .notNull()
             .references(() => posts.id, { onDelete: 'cascade' }),
-        count: integer('count').notNull().default(0),
+        userId: text('user_id'),
+        viewedAt: integer('viewed_at', { mode: 'timestamp' })
+            .notNull()
+            .$defaultFn(() => new Date()),
+        ipAddress: text('ip_address'),
+        userAgent: text('user_agent'),
     },
-    (table) => [index('idx_views_postId').on(table.postId), index('idx_views_postId_count').on(table.postId, table.count)],
+    (table) => [
+        index('idx_views_postId').on(table.postId),
+        index('idx_views_postId_viewedAt').on(table.postId, table.viewedAt),
+        index('idx_views_userId').on(table.userId),
+    ],
 )
 
 export const likes = sqliteTable(

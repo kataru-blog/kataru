@@ -62,6 +62,29 @@ export const isLikedByUser = async (db: DB, postId: string, userId: string) => {
     return !!like
 }
 
+export const trackPostView = async (
+    db: DB, 
+    postId: string, 
+    options?: {
+        userId?: string | null
+        ipAddress?: string | null
+        userAgent?: string | null
+    }
+) => {
+    try {
+        await db.insert(views).values({
+            id: crypto.randomUUID(),
+            postId,
+            userId: options?.userId || null,
+            viewedAt: new Date(),
+            ipAddress: options?.ipAddress || null,
+            userAgent: options?.userAgent || null,
+        }).run()
+    } catch (error) {
+        console.error('Failed to track post view:', error)
+    }
+}
+
 export const getUserLikedPosts = async (db: DB, userId: string, options?: {
     limit?: number
     offset?: number
@@ -76,7 +99,7 @@ export const getUserLikedPosts = async (db: DB, userId: string, options?: {
             blog: blogs,
             viewCount: sql<number>`
                 COALESCE((
-                    SELECT ${views.count}
+                    SELECT COUNT(*)
                     FROM ${views}
                     WHERE ${views.postId} = ${posts.id}
                 ), 0)

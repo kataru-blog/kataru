@@ -70,14 +70,16 @@
         },
 
         init() {
-            this.apply(this.getPreference())
+            const theme = this.getPreference()
+            const resolvedTheme = this.resolve(theme)
+            document.documentElement.classList.add(resolvedTheme)
+            
             this.watchSystem()
             window.setTheme = this.set.bind(this)
             document.addEventListener('DOMContentLoaded', () => {
                 this.metaThemeColor = document.querySelector(META_THEME_COLOR_SELECTOR)
                 this.setupToggle()
 
-                const resolvedTheme = this.resolve(this.getPreference())
                 if (this.metaThemeColor) {
                     const color = resolvedTheme === 'dark' ? '#ffffff' : '#000000'
                     this.metaThemeColor.setAttribute('content', color)

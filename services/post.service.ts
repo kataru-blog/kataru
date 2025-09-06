@@ -1,5 +1,5 @@
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
-import { eq, and, desc, asc, inArray, count, max, gte, lte, or, like, SQL } from 'drizzle-orm'
+import { eq, and, desc, asc, inArray, count, max, gte, lte, or, like, SQL, sql } from 'drizzle-orm'
 import { posts, blogs, tags, postTags, views, likes } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
@@ -78,12 +78,6 @@ export const createPost = async (
             )
         }
     }
-
-    await db.insert(views).values({
-        id: crypto.randomUUID(),
-        postId,
-        count: 0,
-    })
 
     return newPost
 }
@@ -216,13 +210,18 @@ export const getPosts = async (
             .select({
                 post: posts,
                 blog: blogs,
-                viewCount: views.count,
+                viewCount: sql<number>`
+                    COALESCE((
+                        SELECT COUNT(*)
+                        FROM ${views}
+                        WHERE ${views.postId} = ${posts.id}
+                    ), 0)
+                `.as('viewCount'),
                 likeCount: likeCountSq.likeCount,
             })
             .from(postTags)
             .innerJoin(posts, eq(postTags.postId, posts.id))
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
-            .leftJoin(views, eq(views.postId, posts.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
             .where(eq(postTags.tagId, options.tagId))
             .$dynamic()
@@ -231,12 +230,17 @@ export const getPosts = async (
             .select({
                 post: posts,
                 blog: blogs,
-                viewCount: views.count,
+                viewCount: sql<number>`
+                    COALESCE((
+                        SELECT COUNT(*)
+                        FROM ${views}
+                        WHERE ${views.postId} = ${posts.id}
+                    ), 0)
+                `.as('viewCount'),
                 likeCount: likeCountSq.likeCount,
             })
             .from(posts)
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
-            .leftJoin(views, eq(views.postId, posts.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
             .$dynamic()
     }
@@ -255,7 +259,7 @@ export const getPosts = async (
     }
 
     if (options?.orderBy === 'most_view') {
-        postsQuery = postsQuery.orderBy(desc(views.count))
+        postsQuery = postsQuery.orderBy(desc(sql`viewCount`))
     } else if (options?.orderBy === 'most_like') {
         postsQuery = postsQuery.orderBy(desc(likeCountSq.likeCount))
     } else {
@@ -301,11 +305,16 @@ export const getPostsByBlogId = async (
     let postsQuery = db
         .select({
             post: posts,
-            viewCount: views.count,
+            viewCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${views}
+                    WHERE ${views.postId} = ${posts.id}
+                ), 0)
+            `.as('viewCount'),
             likeCount: likeCountSq.likeCount,
         })
         .from(posts)
-        .leftJoin(views, eq(views.postId, posts.id))
         .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
         .where(eq(posts.blogId, blogId))
         .$dynamic()
@@ -331,7 +340,7 @@ export const getPostsByBlogId = async (
     }
 
     if (options?.orderBy === 'most_view') {
-        postsQuery = postsQuery.orderBy(desc(views.count))
+        postsQuery = postsQuery.orderBy(desc(sql`viewCount`))
     } else if (options?.orderBy === 'most_like') {
         postsQuery = postsQuery.orderBy(desc(likeCountSq.likeCount))
     } else {
@@ -374,15 +383,20 @@ export const getHotArticles = async (db: DB, limit: number = 5) => {
         .select({
             post: posts,
             blog: blogs,
-            viewCount: views.count,
+            viewCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${views}
+                    WHERE ${views.postId} = ${posts.id}
+                ), 0)
+            `.as('viewCount'),
             likeCount: likeCountSq.likeCount,
         })
         .from(posts)
         .innerJoin(blogs, eq(posts.blogId, blogs.id))
-        .leftJoin(views, eq(views.postId, posts.id))
         .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
         .where(and(gte(posts.createdAt, startOfWeek), lte(posts.createdAt, endOfWeek)))
-        .orderBy(desc(likeCountSq.likeCount), desc(views.count), asc(posts.title))
+        .orderBy(desc(likeCountSq.likeCount), desc(sql`viewCount`), asc(posts.title))
         .limit(safeLimit)
         .all()
 
@@ -412,12 +426,17 @@ export const getPostById = async (db: DB, postId: string, includeRelated: boolea
         .select({
             post: posts,
             blog: blogs,
-            viewCount: views.count,
+            viewCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${views}
+                    WHERE ${views.postId} = ${posts.id}
+                ), 0)
+            `.as('viewCount'),
             likeCount: likeCountSq.likeCount,
         })
         .from(posts)
         .innerJoin(blogs, eq(posts.blogId, blogs.id))
-        .leftJoin(views, eq(views.postId, posts.id))
         .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
         .where(eq(posts.id, postId))
         .get()
@@ -440,11 +459,6 @@ export const getPostById = async (db: DB, postId: string, includeRelated: boolea
         tagsData = postTagsData.map((t) => t.tag)
     }
 
-    db.update(views)
-        .set({ count: (postData.viewCount || 0) + 1 })
-        .where(eq(views.postId, postId))
-        .run()
-        .catch(console.error)
 
     return {
         ...postData.post,

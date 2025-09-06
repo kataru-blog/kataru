@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 import { exec } from 'child_process'
-import { promisify } from 'util'
-import { rm } from 'fs/promises'
 import { existsSync } from 'fs'
+import { rm } from 'fs/promises'
+import { promisify } from 'util'
 
 const execAsync = promisify(exec)
 
@@ -30,7 +30,7 @@ const reset = async () => {
             'session',
             'user',
             'verification',
-            // 앱 테이블들
+            'custom_link',
             'custom_domains',
             'comments',
             'likes',

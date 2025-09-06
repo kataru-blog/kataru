@@ -105,7 +105,7 @@ export const ArticleLoader: FC<ArticleLoaderProps> = ({ apiUrl }) => {
                     ))}
                 </div>
                 {hasMore && (
-                    <div ref={loaderRef} className='h-20 flex items-center justify-center'>
+                    <div ref={loaderRef} className='h-20 w-full flex items-center justify-center px-3 sm:px-5'>
                         {isLoading && <span className='text-gray-500'>Loading...</span>}
                     </div>
                 )}

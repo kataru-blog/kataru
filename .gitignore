@@ -7,3 +7,5 @@ drizzle/meta
 drizzle/*.sql
 layoutserver.ts
 docs/
+migrations/
+.mcp.json
