@@ -20,4 +20,5 @@ interface CloudflareEnv {
     CF_ACCOUNT_ID?: string
     CF_IMAGES_API_TOKEN?: string
     CF_IMAGES_ACCOUNT_HASH?: string
+    ADMIN_URL: string
 }
