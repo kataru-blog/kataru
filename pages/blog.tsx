@@ -1,8 +1,8 @@
+import { UserCard } from '@/island'
 import { getPostsByBlogId } from '@/services/post.service'
 import { getTagsByBlogId } from '@/services/tag.service'
 import { getCustomLinksByNickname } from '@/services/user.service'
 import { IslandRenderer } from '@/shared/islands/renderer'
-import { UserCard } from '@/widgets'
 import { Context } from 'hono'
 import { ComponentProps } from 'react'
 
@@ -34,17 +34,16 @@ export const Blog = async (c: Context<{ Bindings: CloudflareEnv }>) => {
 
     return (
         <div className='flex flex-col min-h-dvh size-full gap-3 sm:gap-5 relative'>
-            <UserCard
+            <IslandRenderer
                 className='sticky top-12 z-10 backdrop-blur-sm bg-background/80'
-                blogDescription={blog?.description || ''}
-                user={
-                    {
+                name='UserCard'
+                props={{
+                    blogDescription: blog?.description || '',
+                    user: {
                         ...user,
-                        customLinks: !customLinks
-                            ? []
-                            : customLinks?.sort((a, b) => a.sortOrder - b.sortOrder).map((link) => ({ url: link.url, label: link.label })),
-                    } as ComponentProps<typeof UserCard>['user']
-                }
+                        customLinks: customLinks.sort((a, b) => a.sortOrder - b.sortOrder).map((link) => ({ url: link.url, label: link.label })),
+                    } as ComponentProps<typeof UserCard>['user'],
+                }}
             />
             <main className='flex flex-col w-full h-full'>
                 <IslandRenderer

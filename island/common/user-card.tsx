@@ -75,7 +75,7 @@ export const UserCard: FC<BlogUserCardProps> = ({ user, blogDescription, classNa
             <div className='flex items-start sm:items-center size-full flex-col sm:flex-row border-b border-border'>
                 <div className='flex items-center gap-3 flex-shrink-0 p-1.5 px-3 sm:p-3 border-b sm:border-r sm:border-b-0 border-border sm:w-auto w-full'>
                     <Avatar className='size-10 sm:size-20'>
-                        <AvatarImage src={user?.image || undefined} alt={user?.name} />
+                        <AvatarImage src={user?.image || '/favicon.ico'} alt={user?.name} />
                         <AvatarFallback className='text-md sm:text-xl font-semibold'>{getInitials(user?.name || '')}</AvatarFallback>
                     </Avatar>
                     <div className='flex flex-col gap-1'>

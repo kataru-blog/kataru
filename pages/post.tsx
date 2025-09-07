@@ -1,12 +1,10 @@
+import { Badge } from '@/island/badge'
 import { toHTMLWithTOC } from '@/lib/unified'
 import { getCustomLinksByNickname } from '@/services/user.service'
 import { IslandRenderer } from '@/shared/islands/renderer'
-import { UserCard } from '@/widgets'
 import { Context } from 'hono'
-import { getPostById } from '../services/post.service'
 import { trackPostView } from '../services/engagement.service'
-import { Badge } from '@/island/badge'
-import { GetPostByIdResponse } from '@/types/gateway.types'
+import { getPostById } from '../services/post.service'
 
 export const Post = async (c: Context<{ Bindings: CloudflareEnv }>) => {
     const user = c.get('blogUser')
@@ -57,7 +55,12 @@ export const Post = async (c: Context<{ Bindings: CloudflareEnv }>) => {
                         </Badge>
                     ))}
                 </section>
-                <UserCard className='border-t border-border my-5' blogDescription={postData ? postData.blog.description || '' : ''} user={user} />
+                <IslandRenderer
+                    ssr={true}
+                    className='border-t border-border my-5'
+                    name='UserCard'
+                    props={{ blogDescription: postData ? postData.blog.description || '' : '', user: user }}
+                />
                 <IslandRenderer ssr={false} priority='low' className='p-7' name='Comments' props={{ postId: '1' }} />
             </section>
             <IslandRenderer
