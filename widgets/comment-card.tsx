@@ -13,12 +13,13 @@ interface Comment {
     userId: string
     content: string
     isSecret: boolean
-    parentId: string | undefined
+    parentId: string | null
     createdAt: Date
     updatedAt: Date
-    user: {
-        image: string
+    author: {
+        id: string | null
         name: string
+        image: string | null
         nickname: string
     }
 }
@@ -60,7 +61,7 @@ export const CommentCard: FC<CommentCardProps> = ({ comment, onReply, depth = 0 
     return (
         <div className={`flex gap-3 ${depth > 0 ? 'ml-5' : ''}`}>
             <Avatar className='size-10'>
-                <AvatarImage src={comment.user.image || '/placeholder.svg'} />
+                <AvatarImage src={comment.author.image || '/placeholder.svg'} />
                 <AvatarFallback>
                     <User className='size-5' />
                 </AvatarFallback>
@@ -68,9 +69,9 @@ export const CommentCard: FC<CommentCardProps> = ({ comment, onReply, depth = 0 
 
             <div className='flex flex-col gap-2 flex-1'>
                 <div className='flex items-center gap-2'>
-                    <span className='font-medium text-sm'>{comment.user.name}</span>
-                    <span className='text-xs text-primary/70'>@{comment.user.nickname}</span>
-                    <span className='text-xs text-primary/70'>{comment.createdAt.toLocaleDateString('ko-KR')}</span>
+                    <span className='font-medium text-sm'>{comment.author.name}</span>
+                    {comment.author.id && <span className='text-xs text-primary/70'>@{comment.author.nickname}</span>}
+                    <span className='text-xs text-primary/70'>{new Date(comment.createdAt).toLocaleDateString('ko-KR')}</span>
                     {comment.isSecret && (
                         <Badge variant='outline' className='text-xs'>
                             비밀

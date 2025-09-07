@@ -204,6 +204,7 @@ export const getCommentsByPostId = async (db: DB, postId: string, userId?: strin
                 id: user.id,
                 name: user.name,
                 image: user.image,
+                nickname: user.nickname,
             },
         })
         .from(comments)
@@ -235,6 +236,7 @@ export const getCommentsByPostId = async (db: DB, postId: string, userId?: strin
                     id: null,
                     name: '비밀',
                     image: null,
+                    nickname: '',
                 }
             }
         }

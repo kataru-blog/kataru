@@ -1,7 +1,6 @@
 import { CommentForm } from '@/features/comment'
 import { CommentCard } from '@/widgets/comment-card'
 import type { FC } from 'react'
-import { useState } from 'react'
 
 interface Comment {
     id: string
@@ -9,95 +8,54 @@ interface Comment {
     userId: string
     content: string
     isSecret: boolean
-    parentId: string | undefined
+    parentId: string | null
     createdAt: Date
     updatedAt: Date
-    user: {
-        image: string
+    author: {
+        id: string | null
         name: string
+        image: string | null
         nickname: string
     }
 }
 
 interface CommentListProps {
+    comments: Comment[]
     postId: string
+    currentUser?: {
+        id: string
+        name: string
+        image: string | null
+        nickname: string
+    }
 }
 
-const MOCK_COMMENTS = [
-    {
-        id: '1',
-        postId: '1',
-        userId: '1',
-        content: '댓글 내용',
-        isSecret: false,
-        parentId: undefined,
-        createdAt: new Date('2024-01-01T00:00:00Z'),
-        updatedAt: new Date('2024-01-01T00:00:00Z'),
-        user: {
-            image: 'https://picsum.photos/100/100?random=10',
-            name: '댓글 작성자',
-            nickname: 'comment_writer',
-        },
-    },
-    {
-        id: '2',
-        postId: '1',
-        userId: '2',
-        content: '댓글 내용',
-        isSecret: false,
-        parentId: '1',
-        createdAt: new Date('2024-01-01T01:00:00Z'),
-        updatedAt: new Date('2024-01-01T01:00:00Z'),
-        user: {
-            image: 'https://picsum.photos/100/100?random=11',
-            name: '댓글 작성자',
-            nickname: 'comment_writer',
-        },
-    },
-    {
-        id: '3',
-        postId: '1',
-        userId: '3',
-        content: '댓글 내용',
-        isSecret: false,
-        parentId: '1',
-        createdAt: new Date('2024-01-01T02:00:00Z'),
-        updatedAt: new Date('2024-01-01T02:00:00Z'),
-        user: {
-            image: 'https://picsum.photos/100/100?random=12',
-            name: '댓글 작성자',
-            nickname: 'comment_writer',
-        },
-    },
-]
+export const Comments: FC<CommentListProps> = ({ comments, postId, currentUser }) => {
+    const onReply = async (parentId: string | undefined, content: string, isSecret: boolean) => {
+        if (!currentUser) {
+            alert('로그인이 필요합니다.')
+            return
+        }
 
-export const Comments: FC<CommentListProps> = ({ postId }) => {
-    const [comments, setComments] = useState<Comment[]>(MOCK_COMMENTS)
-
-    const onSubmit = (content: string, isSecret: boolean) => {
-        onReply(undefined, content, isSecret)
-    }
-
-    const onReply = (parentId: string | undefined, content: string, isSecret: boolean) => {
-        const now = new Date()
-        setComments([
-            ...comments,
-            {
-                id: `comment-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
-                postId: postId,
-                userId: '1',
-                content: content,
-                isSecret: isSecret,
-                parentId: parentId,
-                createdAt: now,
-                updatedAt: now,
-                user: {
-                    image: `https://picsum.photos/100/100?random=${Date.now()}`,
-                    name: '댓글 작성자',
-                    nickname: 'comment_writer',
+        try {
+            const response = await fetch(`${window.location.origin}/api/comments/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-            },
-        ])
+                body: JSON.stringify({
+                    content,
+                    isSecret,
+                    parentId: parentId || null,
+                }),
+            })
+
+            if (response.ok) {
+                window.location.reload()
+            }
+        } catch (error) {
+            console.error('Failed to create comment:', error)
+        }
     }
 
     const groupedComments = comments.reduce((acc, comment) => {
@@ -110,7 +68,7 @@ export const Comments: FC<CommentListProps> = ({ postId }) => {
     }, {} as Record<string, Comment[]>)
 
     const sortComments = (comments: Comment[]) => {
-        return comments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime())
+        return comments.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
     }
 
     const renderComments = (comments: Comment[], depth = 0) => {
@@ -130,15 +88,18 @@ export const Comments: FC<CommentListProps> = ({ postId }) => {
 
     if (comments.length === 0) {
         return (
-            <div className='text-center py-8 text-primary/60'>
-                <p className='text-sm'>아직 댓글이 없습니다.</p>
+            <div className='flex flex-col gap-7'>
+                {currentUser && <CommentForm onSubmit={(content, isSecret) => onReply(undefined, content, isSecret)} />}
+                <div className='text-center py-8 text-primary/60'>
+                    <p className='text-sm'>아직 댓글이 없습니다.</p>
+                </div>
             </div>
         )
     }
 
     return (
         <div className='flex flex-col gap-7'>
-            <CommentForm onSubmit={(content, isSecret) => onReply(undefined, content, isSecret)} />
+            {currentUser && <CommentForm onSubmit={(content, isSecret) => onReply(undefined, content, isSecret)} />}
             <section className='flex flex-col gap-7'>{renderComments(rootComments)}</section>
         </div>
     )
