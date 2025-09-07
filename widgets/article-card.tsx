@@ -15,7 +15,7 @@ export const ArticleCard: FC<ArticleCardProps> = ({ id, thumbnailUrl, title, sum
     return (
         <Card
             key={id}
-            className='overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-border/50 hover:border-border py-0 min-h-45'>
+            className='bg-foreground/5 overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-border/50 hover:border-border py-0 min-h-45 w-full'>
             <a href={`/${user.nickname}/${id}`} className='flex h-full flex-col sm:flex-row'>
                 <div className='relative aspect-video overflow-hidden w-full sm:w-50 xl:w-80 rounded-lg bg-muted sm:h-full'>
                     <Image
@@ -26,7 +26,7 @@ export const ArticleCard: FC<ArticleCardProps> = ({ id, thumbnailUrl, title, sum
                     />
                 </div>
 
-                <div className='flex-1 min-w-0 flex flex-col justify-between p-3'>
+                <div className='flex-1 min-w-0 flex flex-col justify-between p-3 w-full'>
                     <div>
                         <h3 className='font-bold text-lg sm:text-xl line-clamp-1 text-balance group-hover:text-primary transition-colors'>{title}</h3>
                         <p className='text-muted-foreground text-md sm:text-base mb-4 line-clamp-2 leading-relaxed'>{summary || ''}</p>
@@ -44,13 +44,13 @@ export const ArticleCard: FC<ArticleCardProps> = ({ id, thumbnailUrl, title, sum
                             </div>
                         </div>
 
-                        <div className='flex items-center gap-4 text-sm text-muted-foreground'>
+                        <div className='flex items-center gap-3.5 text-sm text-muted-foreground'>
                             <div className='flex items-center gap-1'>
-                                <Eye className='w-4 h-4' />
+                                <Eye className='size-3.5' />
                                 <span>{viewCount.toLocaleString()}</span>
                             </div>
                             <div className='flex items-center gap-1'>
-                                <Heart className='w-4 h-4' />
+                                <Heart className='size-3.5' />
                                 <span>{likeCount.toLocaleString()}</span>
                             </div>
                         </div>

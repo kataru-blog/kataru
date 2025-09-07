@@ -22,7 +22,7 @@ export const domainMiddleware = async (c: Context<{ Bindings: CloudflareEnv }>, 
             !pathSegments[0].startsWith('sign-up') &&
             !pathSegments[0].startsWith('logout')
         ) {
-            const userNickname = pathSegments[0]
+            const userNickname = decodeURIComponent(pathSegments[0])
 
             try {
                 const userData = await db.select().from(user).where(eq(user.nickname, userNickname)).get()

@@ -1,6 +1,6 @@
 import type { DrizzleD1Database } from 'drizzle-orm/d1'
 import { eq, and, desc, asc, inArray, count, max, gte, lte, or, like, SQL, sql } from 'drizzle-orm'
-import { posts, blogs, tags, postTags, views, likes } from '../entities'
+import { posts, blogs, tags, postTags, views, likes, user } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
 
@@ -210,6 +210,12 @@ export const getPosts = async (
             .select({
                 post: posts,
                 blog: blogs,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    nickname: user.nickname,
+                    image: user.image,
+                },
                 viewCount: sql<number>`
                     COALESCE((
                         SELECT COUNT(*)
@@ -222,6 +228,7 @@ export const getPosts = async (
             .from(postTags)
             .innerJoin(posts, eq(postTags.postId, posts.id))
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
+            .innerJoin(user, eq(blogs.userId, user.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
             .where(eq(postTags.tagId, options.tagId))
             .$dynamic()
@@ -230,6 +237,12 @@ export const getPosts = async (
             .select({
                 post: posts,
                 blog: blogs,
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    nickname: user.nickname,
+                    image: user.image,
+                },
                 viewCount: sql<number>`
                     COALESCE((
                         SELECT COUNT(*)
@@ -241,6 +254,7 @@ export const getPosts = async (
             })
             .from(posts)
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
+            .innerJoin(user, eq(blogs.userId, user.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
             .$dynamic()
     }
@@ -271,6 +285,7 @@ export const getPosts = async (
     return postsData.map((p) => ({
         ...p.post,
         blog: p.blog,
+        user: p.user,
         viewCount: p.viewCount || 0,
         likeCount: p.likeCount || 0,
         page: Math.ceil((offset + 1) / limit),

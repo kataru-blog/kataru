@@ -11,3 +11,4 @@ migrations/
 .mcp.json
 styles.css
 client.js
+entities/types

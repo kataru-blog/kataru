@@ -44,16 +44,19 @@ export const Post = async (c: Context<{ Bindings: CloudflareEnv }>) => {
         <main className='flex w-full gap-2'>
             <section className='w-full border-r border-border relative'>
                 <IslandRenderer className='sticky top-12 z-10' ssr={true} priority='high' name='PostHeader' props={{ ...postInfo }} />
-                <article className='relative flex gap-2 justify-center mx-auto p-7'>
+                <article className='relative flex flex-col gap-2 justify-center mx-auto p-7'>
                     <div className='prose size-full' dangerouslySetInnerHTML={{ __html: html }} />
-                    <section className='flex flex-col gap-2 flex-wrap'>
-                        {postInfo.tags.map((tag) => (
-                            <Badge variant={'outline'} className='text-xs sm:text-sm py-0.5 px-1 sm:py-1 sm:px-1.5 h-fit rounded' key={tag.id}>
-                                {tag.name}
-                            </Badge>
-                        ))}
-                    </section>
                 </article>
+                <section className='flex flex-col sm:flex-row gap-2 flex-wrap px-3 sm:px-5'>
+                    {postInfo.tags.map((tag) => (
+                        <Badge
+                            variant={'outline'}
+                            className='text-xs sm:text-sm py-0.5 px-1 sm:py-1 sm:px-1.5 h-fit rounded select-none'
+                            key={tag.id}>
+                            {tag.name}
+                        </Badge>
+                    ))}
+                </section>
                 <UserCard className='border-t border-border my-5' blogDescription={postData ? postData.blog.description || '' : ''} user={user} />
                 <IslandRenderer ssr={false} priority='low' className='p-7' name='Comments' props={{ postId: '1' }} />
             </section>

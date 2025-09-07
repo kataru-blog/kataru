@@ -1,7 +1,11 @@
 name = "kataru"
 main = "main.ts"
-compatibility_date = "2024-01-01"
+
+compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+
+[placement]
+mode = "smart"
 
 routes = [
   { pattern = "kataru.dev", custom_domain = true },

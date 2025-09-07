@@ -45,7 +45,13 @@ export const createAuth = (env: CloudflareEnv) => {
             },
         },
 
-        trustedOrigins: ['http://localhost:3000', 'https://kataru.gumyoincirno.workers.dev', 'https://kataru.dev', 'http://kataru.dev'],
+        trustedOrigins: [
+            'http://localhost:3000',
+            'http://localhost:10101',
+            'https://kataru.gumyoincirno.workers.dev',
+            'https://kataru.dev',
+            'http://kataru.dev',
+        ],
 
         hooks: {
             after: createAuthMiddleware(async (ctx) => {
@@ -72,8 +78,19 @@ export const createAuth = (env: CloudflareEnv) => {
                         })
                     }
                 }
+
+                // OAuth 성공 후 프론트엔드로 리다이렉트
+                if (ctx.request && ctx.context.newSession?.user.id) {
+                    const url = new URL(ctx.request.url)
+                    const callbackURL = url.searchParams.get('callbackURL')
+
+                    if (callbackURL && callbackURL.includes('localhost:10101')) {
+                        throw ctx.redirect(`http://localhost:10101/auth/callback?success=true`)
+                    }
+                }
             }),
         },
+
         advanced: {
             crossSubDomainCookies: {
                 enabled: false,

@@ -10,6 +10,7 @@ import rehypeStringify from 'rehype-stringify'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remarkRehype from 'remark-rehype'
+import remarkBreaks from 'remark-breaks'
 import { unified } from 'unified'
 import { visit } from 'unist-util-visit'
 
@@ -80,6 +81,7 @@ export const toHTMLWithTOC = async (markdown: string) => {
     const file = await unified()
         .use(remarkParse)
         .use(remarkGfm)
+        .use(remarkBreaks)
         .use(remarkRehype, { allowDangerousHtml: false })
         .use(rehypeSlug)
         .use(rehypeExternalLinks, { target: '_blank', rel: ['nofollow', 'noopener', 'noreferrer'] })
@@ -88,7 +90,6 @@ export const toHTMLWithTOC = async (markdown: string) => {
             behavior: 'wrap',
             properties: { className: ['heading-link'], ariaHidden: 'false', tabIndex: 0 },
         })
-
         .use(rehypeCollectToc)
         .use(rehypeWrapTables)
         .use(rehypeHighlight, { detect: true })

@@ -25,10 +25,7 @@ export const Home = async (c: Context<{ Bindings: CloudflareEnv }>) => {
         summary: post.summary,
         thumbnailUrl: post.thumbnailUrl,
         createdAt: post.createdAt,
-        user: {
-            nickname: post.blog?.title || 'Anonymous',
-            image: null,
-        },
+        user: post.user,
         tags: [],
         viewCount: post.viewCount,
         likeCount: post.likeCount,
@@ -68,7 +65,7 @@ export const Home = async (c: Context<{ Bindings: CloudflareEnv }>) => {
                     sortBy: searchParams.sort,
                 }}
             />
-            <section>
+            <section className='w-full'>
                 <IslandRenderer className='w-full px-3 sm:px-5' ssr={true} priority='high' name='Articles' props={{ posts }} />
                 <IslandRenderer ssr={false} priority='low' props={{ apiUrl: '/api/posts' }} name='ArticleLoader' />
             </section>

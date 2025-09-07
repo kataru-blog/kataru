@@ -15,6 +15,7 @@ export const posts = sqliteTable(
         summary: text('summary'),
         isNotice: integer('is_notice', { mode: 'boolean' }).notNull().default(false),
         allowComment: integer('allow_comment', { mode: 'boolean' }).notNull().default(true),
+        isHidden: integer('is_hidden', { mode: 'boolean' }).notNull().default(false),
         createdAt: integer('created_at', { mode: 'timestamp' })
             .notNull()
             .$defaultFn(() => new Date()),
@@ -26,6 +27,7 @@ export const posts = sqliteTable(
         index('idx_posts_blogId').on(table.blogId),
         index('idx_posts_createdAt').on(table.createdAt),
         index('idx_posts_blogId_createdAt').on(table.blogId, table.createdAt),
+        index('idx_posts_isHidden').on(table.isHidden),
     ],
 )
 
