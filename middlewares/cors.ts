@@ -8,6 +8,7 @@ export const setCors = () => cors({
                 'https://kataru.gumyoincirno.workers.dev',
                 'kataru.dev',
                 c.env.BASE_URL,
+                c.env.ADMIN_URL,
             ]
             if (allowedOrigins.includes(origin) || origin.includes(c.env.BASE_URL)) return origin
             return null
