@@ -2,6 +2,7 @@ import { and, desc, eq, like, not, sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { posts, postTags, tags } from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
+import { escapeLikePattern } from '../shared/utils/sql-escape'
 
 type DB = ReturnType<typeof drizzle>
 
@@ -222,7 +223,7 @@ export const searchTags = async (
             `.as('postCount'),
         })
         .from(tags)
-        .where(like(tags.name, `%${query}%`))
+        .where(like(tags.name, `%${escapeLikePattern(query)}%`))
         .orderBy(desc(tags.name))
         .limit(limit)
         .all()

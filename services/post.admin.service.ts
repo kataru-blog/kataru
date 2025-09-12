@@ -3,6 +3,7 @@ import { eq, and, desc, asc, or, like, sql, inArray, ne, lt, gt } from 'drizzle-
 import { posts, blogs, tags, postTags, views, likes, comments } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
+import { escapeLikePattern } from '../shared/utils/sql-escape'
 
 type DB = DrizzleD1Database<typeof schema>
 
@@ -33,14 +34,15 @@ export const getAdminPosts = async (
     }
 
     if (options?.keyword) {
+        const escapedKeyword = escapeLikePattern(options.keyword)
         const keywordConditions = [
-            like(posts.title, `%${options.keyword}%`),
-            like(posts.summary, `%${options.keyword}%`),
+            like(posts.title, `%${escapedKeyword}%`),
+            like(posts.summary, `%${escapedKeyword}%`),
             sql`EXISTS (
                 SELECT 1 FROM ${postTags}
                 INNER JOIN ${tags} ON ${postTags.tagId} = ${tags.id}
                 WHERE ${postTags.postId} = ${posts.id}
-                AND ${tags.name} LIKE ${'%' + options.keyword + '%'}
+                AND ${tags.name} LIKE ${'%' + escapedKeyword + '%'}
             )`
         ]
         conditions.push(or(...keywordConditions)!)

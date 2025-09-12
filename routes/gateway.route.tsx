@@ -4,18 +4,29 @@ import { getAllTags, getTagsByBlogId } from '@/services/tag.service'
 import { toggleLike, isLikedByUser } from '@/services/engagement.service'
 import { Hono } from 'hono'
 
+const validatePagination = (page?: string, limit?: string) => {
+    const pageNum = Math.max(1, Number(page || 1))
+    const limitNum = Math.min(100, Math.max(1, Number(limit || 10)))
+    const offset = (pageNum - 1) * limitNum
+    
+    return { page: pageNum, limit: limitNum, offset }
+}
+
+const sanitizeSearchParam = (param?: string) => {
+    if (!param) return undefined
+    return param.replace(/[%_]/g, '\\$&')
+}
+
 export const GatewayRoute = () => {
     const app = new Hono<{ Bindings: CloudflareEnv }>()
 
     app.get('/posts', async (c) => {
         const db = c.get('db')
-        const page = Number(c.req.query('page') || 1)
-        const limit = Number(c.req.query('limit') || 10)
-        const offset = (page - 1) * limit
+        const { page, limit, offset } = validatePagination(c.req.query('page'), c.req.query('limit'))
 
         const posts = await getPosts(db, {
             tagId: c.req.query('tagId'),
-            keyword: c.req.query('keyword'),
+            keyword: sanitizeSearchParam(c.req.query('keyword')),
             orderBy: c.req.query('orderBy') as 'newest' | 'most_view' | 'most_like' | undefined,
             limit,
             offset,
@@ -26,11 +37,13 @@ export const GatewayRoute = () => {
 
     app.get('/posts/:blogId', async (c) => {
         const db = c.get('db')
+        const { limit, offset } = validatePagination(c.req.query('page'), c.req.query('limit'))
+        
         return c.json(
             getPostsByBlogId(db, c.req.param('blogId'), {
                 orderBy: c.req.query('orderBy') as 'newest' | 'most_view' | 'most_like' | undefined,
-                limit: Number(c.req.query('limit') || 10),
-                offset: Number(c.req.query('page') || 1),
+                limit,
+                offset,
             }),
         )
     })
@@ -42,15 +55,18 @@ export const GatewayRoute = () => {
 
     app.get('hots', async (c) => {
         const db = c.get('db')
-        return c.json(getHotArticles(db, Number(c.req.query('limit') || 5)))
+        const limit = Math.min(20, Math.max(1, Number(c.req.query('limit') || 5)))
+        return c.json(getHotArticles(db, limit))
     })
 
     app.get('/tags', async (c) => {
         const db = c.get('db')
+        const { limit, offset } = validatePagination(c.req.query('page'), c.req.query('limit'))
+        
         return c.json(
             getAllTags(db, {
-                limit: Number(c.req.query('limit') || 5),
-                offset: Number(c.req.query('page') || 1),
+                limit,
+                offset,
                 orderBy: 'name',
             }),
         )
@@ -58,9 +74,11 @@ export const GatewayRoute = () => {
 
     app.get('/tags/:blogId', async (c) => {
         const db = c.get('db')
+        const limit = Math.min(50, Math.max(1, Number(c.req.query('limit') || 5)))
+        
         return c.json(
             getTagsByBlogId(db, c.req.param('blogId'), {
-                limit: Number(c.req.query('limit') || 5),
+                limit,
                 orderBy: c.req.query('orderBy') as 'name' | 'popular' | undefined,
             }),
         )
@@ -68,9 +86,7 @@ export const GatewayRoute = () => {
 
     app.get('/comments/:postId', async (c) => {
         const db = c.get('db')
-        const page = Number(c.req.query('page') || 1)
-        const limit = Number(c.req.query('limit') || 50)
-        const offset = (page - 1) * limit
+        const { limit, offset } = validatePagination(c.req.query('page'), c.req.query('limit'))
         
         return c.json(
             await getCommentsByPostId(db, c.req.param('postId'), c.get('user')?.id, {

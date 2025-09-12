@@ -3,6 +3,7 @@ import { eq, and, desc, asc, like, sql, lt, gt } from 'drizzle-orm'
 import { comments, posts, blogs, user } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
+import { escapeLikePattern } from '../shared/utils/sql-escape'
 
 type DB = DrizzleD1Database<typeof schema>
 
@@ -27,7 +28,8 @@ export const getAdminComments = async (
     ]
 
     if (options?.keyword) {
-        conditions.push(like(comments.content, `%${options.keyword}%`))
+        const escapedKeyword = escapeLikePattern(options.keyword)
+        conditions.push(like(comments.content, `%${escapedKeyword}%`))
     }
     
     if (options?.useCursor && options?.cursor) {
@@ -75,7 +77,7 @@ export const getAdminComments = async (
                 WHERE ${posts.id} = ${comments.postId}
                 AND ${posts.blogId} = ${blogId}
             )`,
-            options?.keyword ? like(comments.content, `%${options.keyword}%`) : sql`1=1`
+            options?.keyword ? like(comments.content, `%${escapeLikePattern(options.keyword)}%`) : sql`1=1`
         ))
         .get()
 

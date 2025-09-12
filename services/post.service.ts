@@ -3,6 +3,7 @@ import { eq, and, desc, asc, inArray, count, max, gte, lte, or, like, SQL, sql }
 import { posts, blogs, tags, postTags, views, likes, user } from '../entities'
 import * as schema from '../entities'
 import { AppError, ERROR_MESSAGES } from '../shared/constant/error-messages'
+import { escapeLikePattern } from '../shared/utils/sql-escape'
 
 type DB = DrizzleD1Database<typeof schema>
 
@@ -260,7 +261,7 @@ export const getPosts = async (
     }
 
     if (options?.keyword && options.keyword.trim()) {
-        const searchPattern = `%${options.keyword.trim()}%`
+        const searchPattern = `%${escapeLikePattern(options.keyword.trim())}%`
         const conditions: SQL<unknown>[] = []
 
         if (options.tagId) {
@@ -346,7 +347,7 @@ export const getPostsByBlogId = async (
     }
 
     if (options?.keyword && options.keyword.trim()) {
-        const searchPattern = `%${options.keyword.trim()}%`
+        const searchPattern = `%${escapeLikePattern(options.keyword.trim())}%`
         conditions.push(or(like(posts.title, searchPattern), like(posts.content, searchPattern)) as SQL<unknown>)
     }
 

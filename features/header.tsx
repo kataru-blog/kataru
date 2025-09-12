@@ -27,6 +27,9 @@ export const Header: FC<HeaderProps> = ({ user, blog, isRoot, blogName }) => {
             <div className='flex items-center gap-2 sm:gap-3'>
                 {user?.id ? (
                     <Fragment>
+                        <a href='https://admin.kataru.dev' className='text-sm text-foreground/70 hover:text-foreground transition-colors'>
+                            관리자
+                        </a>
                         <a href={`/${user.nickname}`} className='text-sm text-foreground/70 hover:text-foreground transition-colors'>
                             {user.name}
                         </a>
