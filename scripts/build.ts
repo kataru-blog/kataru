@@ -1,4 +1,5 @@
 import { existsSync, mkdirSync } from 'fs'
+// @ts-expect-error
 import * as islands from 'island'
 import { join } from 'path'
 

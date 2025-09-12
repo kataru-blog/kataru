@@ -51,6 +51,8 @@ export const createAuth = (env: CloudflareEnv) => {
             'https://kataru.gumyoincirno.workers.dev',
             'https://kataru.dev',
             'http://kataru.dev',
+            'https://admin.kataru.dev',
+            'http://admin.kataru.dev',
         ],
 
         hooks: {
@@ -92,11 +94,11 @@ export const createAuth = (env: CloudflareEnv) => {
 
         advanced: {
             crossSubDomainCookies: {
-                enabled: false,
+                enabled: true,
             },
             defaultCookieAttributes: {
                 sameSite: 'lax',
-                secure: env.NODE_ENV === 'production',
+                secure: process.env.NODE_ENV === 'production',
                 httpOnly: true,
             },
         },
