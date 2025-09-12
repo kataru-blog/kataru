@@ -2,6 +2,7 @@ import { getCommentsByPostId, createComment } from '@/services/comment.service'
 import { getHotArticles, getPostById, getPosts, getPostsByBlogId } from '@/services/post.service'
 import { getAllTags, getTagsByBlogId } from '@/services/tag.service'
 import { toggleLike, isLikedByUser } from '@/services/engagement.service'
+import { ERROR_MESSAGES } from '@/shared/constant/error-messages'
 import { Hono } from 'hono'
 
 const validatePagination = (page?: string, limit?: string) => {
@@ -102,7 +103,7 @@ export const GatewayRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: '로그인이 필요합니다.' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -135,7 +136,7 @@ export const GatewayRoute = () => {
         const postId = c.req.param('postId')
         
         if (!user) {
-            return c.json({ error: '로그인이 필요합니다.' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const result = await toggleLike(db, postId, user.id)

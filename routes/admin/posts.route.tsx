@@ -6,6 +6,7 @@ import {
     updateAdminPost,
     deleteAdminPost
 } from '@/services/post.admin.service'
+import { ERROR_MESSAGES } from '@/shared/constant/error-messages'
 
 export const AdminPostsRoute = () => {
     const app = new Hono<{ Bindings: CloudflareEnv }>()
@@ -44,7 +45,7 @@ export const AdminPostsRoute = () => {
         const postId = c.req.param('postId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const post = await getAdminPostById(db, postId, user.id)
@@ -57,7 +58,7 @@ export const AdminPostsRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -81,7 +82,7 @@ export const AdminPostsRoute = () => {
         const postId = c.req.param('postId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -106,7 +107,7 @@ export const AdminPostsRoute = () => {
         const postId = c.req.param('postId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const result = await deleteAdminPost(db, postId, user.id)

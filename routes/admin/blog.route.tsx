@@ -14,6 +14,7 @@ import {
     getUserInfo,
     updateUserInfo
 } from '@/services/blog.admin.service'
+import { ERROR_MESSAGES } from '@/shared/constant/error-messages'
 
 export const AdminBlogRoute = () => {
     const app = new Hono<{ Bindings: CloudflareEnv }>()
@@ -24,7 +25,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const blogInfo = await getBlogInfo(db, blog.id, user.id)
@@ -37,7 +38,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -57,7 +58,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const domains = await getCustomDomains(db, blog.id, user.id)
@@ -70,7 +71,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -85,7 +86,7 @@ export const AdminBlogRoute = () => {
         const domainId = c.req.param('domainId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -100,7 +101,7 @@ export const AdminBlogRoute = () => {
         const domainId = c.req.param('domainId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const result = await deleteCustomDomain(db, domainId, user.id)
@@ -112,7 +113,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const links = await getCustomLinks(db, user.id)
@@ -124,7 +125,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -144,7 +145,7 @@ export const AdminBlogRoute = () => {
         const linkId = c.req.param('linkId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -164,7 +165,7 @@ export const AdminBlogRoute = () => {
         const linkId = c.req.param('linkId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const result = await deleteCustomLink(db, linkId, user.id)
@@ -176,7 +177,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()
@@ -190,7 +191,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const userInfo = await getUserInfo(db, user.id)
@@ -202,7 +203,7 @@ export const AdminBlogRoute = () => {
         const user = c.get('user')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const body = await c.req.json()

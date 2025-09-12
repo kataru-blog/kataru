@@ -57,7 +57,7 @@ export const CloudflareImagesRoute = () => {
                 return c.json({ error: error.message }, error.status as Parameters<typeof c.json>[1])
             }
             console.error('CF Images upload error:', error)
-            return c.json({ error: 'Failed to upload image' }, 500 as Parameters<typeof c.json>[1])
+            return c.json({ error: ERROR_MESSAGES.GENERAL.INTERNAL_ERROR.message }, ERROR_MESSAGES.GENERAL.INTERNAL_ERROR.status as Parameters<typeof c.json>[1])
         }
     })
 

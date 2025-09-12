@@ -3,6 +3,7 @@ import {
     getAdminComments,
     deleteAdminComment
 } from '@/services/comment.admin.service'
+import { ERROR_MESSAGES } from '@/shared/constant/error-messages'
 
 export const AdminCommentsRoute = () => {
     const app = new Hono<{ Bindings: CloudflareEnv }>()
@@ -37,7 +38,7 @@ export const AdminCommentsRoute = () => {
         const commentId = c.req.param('commentId')
         
         if (!user) {
-            return c.json({ error: 'Unauthorized' }, 401)
+            return c.json({ error: ERROR_MESSAGES.AUTH.UNAUTHORIZED.message }, ERROR_MESSAGES.AUTH.UNAUTHORIZED.status)
         }
         
         const result = await deleteAdminComment(db, commentId, user.id)

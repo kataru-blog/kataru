@@ -81,7 +81,9 @@ export const getTagById = async (db: DB, tagId: string) => {
                 COALESCE((
                     SELECT COUNT(*)
                     FROM ${postTags}
+                    INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
                     WHERE ${postTags.tagId} = ${tags.id}
+                    AND ${posts.isHidden} = false
                 ), 0)
             `.as('postCount'),
         })
@@ -109,7 +111,9 @@ export const getTagByName = async (db: DB, name: string) => {
                 COALESCE((
                     SELECT COUNT(*)
                     FROM ${postTags}
+                    INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
                     WHERE ${postTags.tagId} = ${tags.id}
+                    AND ${posts.isHidden} = false
                 ), 0)
             `.as('postCount'),
         })
@@ -139,14 +143,36 @@ export const getAllTags = async (
     const offset = Math.max(options?.offset || 0, 0)
 
     const results = await db
-        .select()
+        .select({
+            tag: tags,
+            postCount: sql<number>`
+                COALESCE((
+                    SELECT COUNT(*)
+                    FROM ${postTags}
+                    INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
+                    WHERE ${postTags.tagId} = ${tags.id}
+                    AND ${posts.isHidden} = false
+                ), 0)
+            `.as('postCount'),
+        })
         .from(tags)
+        .where(
+            sql`EXISTS (
+                SELECT 1 FROM ${postTags}
+                INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
+                WHERE ${postTags.tagId} = ${tags.id}
+                AND ${posts.isHidden} = false
+            )`
+        )
         .orderBy(desc(tags.name))
         .limit(limit)
         .offset(offset)
         .all()
 
-    return results
+    return results.map((r) => ({
+        ...r.tag,
+        postCount: r.postCount,
+    }))
 }
 
 export const getTagsByBlogId = async (
@@ -169,6 +195,7 @@ export const getTagsByBlogId = async (
                     INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
                     WHERE ${postTags.tagId} = ${tags.id} 
                     AND ${posts.blogId} = ${blogId}
+                    AND ${posts.isHidden} = false
                 ), 0)
             `.as('postCount'),
         })
@@ -179,6 +206,7 @@ export const getTagsByBlogId = async (
                 INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
                 WHERE ${postTags.tagId} = ${tags.id}
                 AND ${posts.blogId} = ${blogId}
+                AND ${posts.isHidden} = false
             )`
         )
         .$dynamic()
@@ -218,7 +246,9 @@ export const searchTags = async (
                 COALESCE((
                     SELECT COUNT(*)
                     FROM ${postTags}
+                    INNER JOIN ${posts} ON ${postTags.postId} = ${posts.id}
                     WHERE ${postTags.tagId} = ${tags.id}
+                    AND ${posts.isHidden} = false
                 ), 0)
             `.as('postCount'),
         })

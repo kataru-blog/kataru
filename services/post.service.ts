@@ -231,7 +231,7 @@ export const getPosts = async (
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
             .innerJoin(user, eq(blogs.userId, user.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
-            .where(eq(postTags.tagId, options.tagId))
+            .where(and(eq(postTags.tagId, options.tagId), eq(posts.isHidden, false)))
             .$dynamic()
     } else {
         postsQuery = db
@@ -257,6 +257,7 @@ export const getPosts = async (
             .innerJoin(blogs, eq(posts.blogId, blogs.id))
             .innerJoin(user, eq(blogs.userId, user.id))
             .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
+            .where(eq(posts.isHidden, false))
             .$dynamic()
     }
 
@@ -335,7 +336,7 @@ export const getPostsByBlogId = async (
         .where(eq(posts.blogId, blogId))
         .$dynamic()
 
-    const conditions: SQL<unknown>[] = [eq(posts.blogId, blogId)]
+    const conditions: SQL<unknown>[] = [eq(posts.blogId, blogId), eq(posts.isHidden, false)]
 
     if (options?.tagId) {
         postsQuery = postsQuery.innerJoin(postTags, eq(postTags.postId, posts.id))
@@ -411,7 +412,7 @@ export const getHotArticles = async (db: DB, limit: number = 5) => {
         .from(posts)
         .innerJoin(blogs, eq(posts.blogId, blogs.id))
         .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
-        .where(and(gte(posts.createdAt, startOfWeek), lte(posts.createdAt, endOfWeek)))
+        .where(and(gte(posts.createdAt, startOfWeek), lte(posts.createdAt, endOfWeek), eq(posts.isHidden, false)))
         .orderBy(desc(likeCountSq.likeCount), desc(sql`viewCount`), asc(posts.title))
         .limit(safeLimit)
         .all()
@@ -454,7 +455,7 @@ export const getPostById = async (db: DB, postId: string, includeRelated: boolea
         .from(posts)
         .innerJoin(blogs, eq(posts.blogId, blogs.id))
         .leftJoin(likeCountSq, eq(likeCountSq.postId, posts.id))
-        .where(eq(posts.id, postId))
+        .where(and(eq(posts.id, postId), eq(posts.isHidden, false)))
         .get()
 
     if (!postData) {
