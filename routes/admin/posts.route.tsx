@@ -21,7 +21,7 @@ export const AdminPostsRoute = () => {
         const limit = Number(c.req.query('limit') || 20)
         const page = Number(c.req.query('page') || 1)
         const offset = (page - 1) * limit
-        const includeHidden = c.req.query('includeHidden') === 'true'
+        const includeHidden = c.req.query('includeHidden') !== 'false'
         
         const result = await getAdminPosts(db, blog.id, {
             keyword,
