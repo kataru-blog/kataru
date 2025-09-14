@@ -328,17 +328,15 @@ export const reorderCustomLinks = async (
         }
     }
     
-    await db.batch(
-        linkOrders.map(order => 
-            db
-                .update(customLink)
-                .set({ 
-                    sortOrder: order.sortOrder,
-                    updatedAt: new Date()
-                })
-                .where(eq(customLink.id, order.id))
-        )
-    )
+    for (const order of linkOrders) {
+        await db
+            .update(customLink)
+            .set({ 
+                sortOrder: order.sortOrder,
+                updatedAt: new Date()
+            })
+            .where(eq(customLink.id, order.id))
+    }
     
     return { success: true }
 }

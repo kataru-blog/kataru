@@ -59,7 +59,7 @@ export const getAdminPosts = async (
     const orderByColumn = sortBy === 'title' ? posts.title : posts.createdAt
     const orderByDirection = sortOrder === 'asc' ? asc : desc
 
-    let postsQuery = db
+    const baseQuery = db
         .select({
             post: posts,
             blog: blogs,
@@ -91,9 +91,9 @@ export const getAdminPosts = async (
         .orderBy(orderByDirection(orderByColumn))
         .limit(limit)
     
-    if (!options?.useCursor) {
-        postsQuery = postsQuery.offset(offset)
-    }
+    const postsQuery = options?.useCursor 
+        ? baseQuery
+        : baseQuery.offset(offset)
     
     const postsList = await postsQuery.all()
 
@@ -392,7 +392,7 @@ export const getAdminPostById = async (
         throw new AppError(ERROR_MESSAGES.BLOG.UNAUTHORIZED)
     }
 
-    const postTags = await db
+    const postTagsData = await db
         .select({
             id: tags.id,
             name: tags.name,
@@ -405,7 +405,7 @@ export const getAdminPostById = async (
     return {
         ...result.post,
         blog: result.blog,
-        tags: postTags,
+        tags: postTagsData,
         viewCount: result.viewCount,
         likeCount: result.likeCount,
         commentCount: result.commentCount,
