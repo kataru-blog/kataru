@@ -8,6 +8,27 @@ type HonoEnv = { Bindings: CloudflareEnv }
 
 const app = new Hono<HonoEnv>()
 
+// R2 이미지 직접 제공
+app.get('/r2/*', async (c) => {
+    const path = c.req.path
+    const key = path.substring(4) // '/r2/' 제거
+    console.log('Direct R2 request:', path, 'Key:', key)
+    
+    const object = await c.env.R2.get(key)
+    
+    if (!object) {
+        console.error('R2 object not found:', key)
+        return c.text('Not Found', 404)
+    }
+    
+    const headers = new Headers()
+    object.writeHttpMetadata(headers)
+    headers.set('etag', object.httpEtag)
+    headers.set('cache-control', 'public, max-age=31536000')
+    
+    return c.body(object.body, 200, Object.fromEntries(headers))
+})
+
 app.get('*', async (c, next) => {
     const url = new URL(c.req.url)
 

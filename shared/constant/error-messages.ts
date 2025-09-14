@@ -172,6 +172,10 @@ export const ERROR_MESSAGES = {
             status: 404,
             message: 'Image not found',
         },
+        DELETED: {
+            status: 200,
+            message: 'Image deleted',
+        },
     },
 } as const
 
